@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
+@import "@/assets/fonts/index.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,6 +46,18 @@
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
 	--font-sans: "Inter Variable", sans-serif;
+	--font-noto: "Noto Sans", sans-serif;
+	--color-warning-foreground: var(--warning-foreground);
+	--color-warning: var(--warning);
+	--color-success-foreground: var(--success-foreground);
+	--color-success: var(--success);
+	--color-info-foreground: var(--info-foreground);
+	--color-info: var(--info);
+	--color-destructive-foreground: var(--destructive-foreground);
+}
+
+@utility font-noto {
+	font-family: var(--font-noto);
 }
 
 :root {
@@ -80,6 +93,13 @@
 	--sidebar-ring: oklch(0.708 0 0);
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
+	--destructive-foreground: var(--color-red-700);
+	--info: var(--color-blue-500);
+	--info-foreground: var(--color-blue-700);
+	--success: var(--color-emerald-500);
+	--success-foreground: var(--color-emerald-700);
+	--warning: var(--color-amber-500);
+	--warning-foreground: var(--color-amber-700);
 }
 
 .dark {
@@ -114,16 +134,21 @@
 	--sidebar-accent-foreground: oklch(0.985 0 0);
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.556 0 0);
+	--destructive-foreground: var(--color-red-400);
+	--info: var(--color-blue-500);
+	--info-foreground: var(--color-blue-400);
+	--success: var(--color-emerald-500);
+	--success-foreground: var(--color-emerald-400);
+	--warning: var(--color-amber-500);
+	--warning-foreground: var(--color-amber-400);
 }
 
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
-		@apply border-border outline-ring/50;
 	}
 	body {
-		@apply bg-background text-foreground;
-		@apply font-sans bg-background text-foreground;
+		@apply font-sans rtl:font-noto bg-background text-foreground;
 	}
 	html {
 		@apply font-sans;
