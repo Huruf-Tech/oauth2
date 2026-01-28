@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"register:hooks": "git config core.hooksPath .githooks",
+		"register:hooks": "git config core.hooksPath .githooks && chmod +x .githooks/commit-msg && chmod +x .githooks/pre-commit",
 		"fmt": "npx @biomejs/biome format --write",
 		"check": "tsc --noEmit",
 		"lint": "npx @biomejs/biome lint",
