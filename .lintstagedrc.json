@@ -1,7 +1,6 @@
 {
   "!((public)/**/*)*.(ts|tsx|jsx|js|html|css)": [
     "npm run fmt",
-    "npm run lint",
-    "npm run check"
+    "npm run lint"
   ]
 }
