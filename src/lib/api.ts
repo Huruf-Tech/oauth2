@@ -5,6 +5,9 @@ export type TOauthApp = {
     name: string;
     description?: string;
     logo?: string;
+    homepageURL?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
 };
 
 export const getOauthApp = async (): Promise<TOauthApp> => {
