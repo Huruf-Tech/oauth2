@@ -9,11 +9,12 @@
 		"fmt": "npx @biomejs/biome format --write",
 		"check": "tsc --noEmit",
 		"lint": "npx @biomejs/biome lint",
-		"build": "tsc -b && vite build",
+		"build": "tsc -b && vite build --base=/auth/",
 		"preview": "vite preview"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.18",
+		"better-auth": "^1.4.17",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
 		"tailwindcss": "^4.1.18"
