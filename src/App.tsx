@@ -1,16 +1,9 @@
-import { CircleAlertIcon, RefreshCcw } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useLocation, useSearchParams } from "react-router";
+import { Outlet, useSearchParams } from "react-router";
 import HurufLogo from "@/assets/huruf-logo.png";
-import {
-	Alert,
-	AlertAction,
-	AlertDescription,
-	AlertTitle,
-} from "./components/ui/alert";
+import FormSkeleton from "./components/LoadingSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
-import { Button } from "./components/ui/button";
 import { Skeleton } from "./components/ui/skeleton";
 import { type TScheme, useColorScheme } from "./hooks/useColorScheme";
 import { useFavicon } from "./hooks/useFavicon";
@@ -20,9 +13,8 @@ import { applyThemeVars } from "./lib/utils";
 
 function App() {
 	const { t } = useTranslation();
-	const Location = useLocation();
 	const [searchParams] = useSearchParams();
-	const { isLoading, app, error } = useOauthApp();
+	const { isLoading, app } = useOauthApp();
 
 	const appName = app?.name ?? "Huruf Tech";
 	const logo = app?.logo ?? HurufLogo;
@@ -36,14 +28,7 @@ function App() {
 	}, [app]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 bg-linear-to-t from-primary/10 to-transparent to-30% h-full">
-			<title>
-				{isLoading
-					? "Loading OAuth"
-					: error?.message
-						? "OAuth Crashed"
-						: `${app?.name} | ${Location.pathname}`}
-			</title>
+		<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 bg-linear-to-t from-primary/10 to-transparent to-40% h-full">
 			<div className="flex w-full max-w-sm flex-col gap-3">
 				<div className="flex items-center gap-3 self-center">
 					<Avatar className="rounded-xl size-16 bg-transparent">
@@ -59,28 +44,8 @@ function App() {
 						)}
 					</Avatar>
 				</div>
-				{error ? (
-					<Alert variant="error" className="py-1 px-2">
-						<CircleAlertIcon className="fill-destructive stroke-background" />
-						<AlertTitle className="text-destructive text-sm">
-							{error?.name}
-						</AlertTitle>
-						<AlertDescription className="text-destructive text-xs">
-							{error?.message}
-						</AlertDescription>
-						<AlertAction>
-							<Button
-								size="icon-xs"
-								variant={"outline"}
-								onClick={() => window.location.reload()}
-							>
-								<RefreshCcw />
-							</Button>
-						</AlertAction>
-					</Alert>
-				) : null}
 
-				<Outlet />
+				{isLoading ? <FormSkeleton /> : <Outlet />}
 			</div>
 
 			<div className="flex flex-col items-center justify-center">

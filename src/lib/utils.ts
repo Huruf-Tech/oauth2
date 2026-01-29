@@ -13,3 +13,7 @@ export function applyThemeVars(vars: ThemeVars) {
 		root.style.setProperty(k, v);
 	}
 }
+
+export function isValidEmail(email: string): boolean {
+	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}

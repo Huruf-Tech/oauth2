@@ -1,5 +1,6 @@
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { CheckIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import React, { useId } from "react";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -131,6 +132,37 @@ function Signup() {
 							>
 								{getStrengthText(strengthScore)}. Must contain:
 							</p>
+
+							{/* Password requirements list */}
+							<ul aria-label="Password requirements" className="space-y-1.5">
+								{strength.map((req) => (
+									<li className="flex items-center gap-2" key={req.text}>
+										{req.met ? (
+											<CheckIcon
+												aria-hidden="true"
+												className="text-emerald-500"
+												size={16}
+											/>
+										) : (
+											<XIcon
+												aria-hidden="true"
+												className="text-muted-foreground/80"
+												size={16}
+											/>
+										)}
+										<span
+											className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
+										>
+											{req.text}
+											<span className="sr-only">
+												{req.met
+													? " - Requirement met"
+													: " - Requirement not met"}
+											</span>
+										</span>
+									</li>
+								))}
+							</ul>
 						</Field>
 
 						<Field>
@@ -162,7 +194,7 @@ function Signup() {
 									Sign up with Google
 								</Button>
 								<FieldDescription className="px-6 text-center">
-									Already have an account? <a href="#">Sign in</a>
+									Already have an account? <Link to="/">Sign in</Link>
 								</FieldDescription>
 							</Field>
 						</FieldGroup>

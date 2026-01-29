@@ -12,7 +12,7 @@ export function useOauthApp() {
 		setIsLoading(true);
 		setError(null);
 
-		oauthAppPromise ??= getOauthApp();
+		oauthAppPromise ??= getOauthApp(import.meta.env.VITE_OAUTH_APP_ID);
 
 		void (async () => {
 			const app = await oauthAppPromise
