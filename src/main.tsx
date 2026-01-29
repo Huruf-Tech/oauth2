@@ -6,6 +6,7 @@ import "./index.css";
 import "../i18n";
 import App from "./App";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Signup from "./pages/Signup";
 
 const router = createBrowserRouter(
@@ -21,6 +22,10 @@ const router = createBrowserRouter(
 				{
 					path: "/signup",
 					element: <Signup />,
+				},
+				{
+					path: "/profile",
+					element: <Profile />,
 				},
 			],
 		},

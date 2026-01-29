@@ -1,7 +1,7 @@
 import { KeyIcon } from "lucide-react";
 import React from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import FormCrash from "@/components/FormCrash";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,10 @@ function Login() {
 	const { t } = useTranslation();
 
 	const { app, isLoading, error } = useOauthApp();
+
+	const { data } = authClient.useSession();
+
+	if (data) return <Navigate to="/profile" />;
 
 	return (
 		<React.Fragment>
@@ -61,6 +65,7 @@ function Login() {
 												onClick={async () => {
 													const Response = await authClient.signIn.social({
 														provider: key,
+														callbackURL: window.location.href,
 													});
 													console.log(Response);
 												}}
