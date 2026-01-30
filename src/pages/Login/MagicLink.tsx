@@ -1,5 +1,6 @@
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth";
 import { isValidEmail } from "@/lib/utils";
 
 const DefaultForm = {
@@ -17,12 +19,22 @@ const DefaultForm = {
 
 function MagicLinkForm() {
 	const { t } = useTranslation();
-	const { register, handleSubmit, formState } = useForm<typeof DefaultForm>({
+
+	const { register, handleSubmit, formState, reset } = useForm<
+		typeof DefaultForm
+	>({
 		defaultValues: DefaultForm,
 	});
 
-	const onSubmit: SubmitHandler<typeof DefaultForm> = (data) =>
-		console.log(data);
+	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
+		const Response = await authClient.signIn.magicLink({ email: data.email });
+
+		if (Response.error) toast.error(Response.error.message);
+		else {
+			reset();
+			toast.success(t("A Magic Link has been sent to your mailbox!"));
+		}
+	};
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)}>
@@ -33,11 +45,10 @@ function MagicLinkForm() {
 						id="email"
 						type="email"
 						placeholder="m@example.com"
+						autoComplete="email webauthn"
 						{...register("email", {
 							validate: (value) =>
-								isValidEmail(value)
-									? false
-									: t("Please provide a valid email!"),
+								isValidEmail(value) ? true : t("Please provide a valid email!"),
 						})}
 					/>
 
@@ -46,7 +57,7 @@ function MagicLinkForm() {
 				<Field>
 					<Button type="submit">
 						{formState.isSubmitting && <Spinner />}
-						{t("Sign-in with Magic Link")}
+						{t("Login")}
 					</Button>
 				</Field>
 			</FieldGroup>

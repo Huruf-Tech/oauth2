@@ -15,6 +15,12 @@ export function useColorScheme(scheme: TScheme = "system") {
 		if (scheme)
 			root.classList.add(scheme === "system" ? currentScheme : scheme);
 		else root.classList.add(currentScheme);
+
+		return scheme
+			? scheme === "system"
+				? currentScheme
+				: scheme
+			: currentScheme;
 	}, [scheme]);
 
 	return { scheme: Scheme };

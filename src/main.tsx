@@ -1,12 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import "./index.css";
 import "../i18n";
 import App from "./App";
+import Account from "./pages/Account";
+import Profile from "./pages/Account/Profile";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
 import Signup from "./pages/Signup";
 
 const router = createBrowserRouter(
@@ -17,15 +18,25 @@ const router = createBrowserRouter(
 			children: [
 				{
 					index: true,
+					element: <Navigate to="/account" />,
+				},
+				{
+					path: "/account",
+					element: <Account />,
+					children: [
+						{
+							path: "/account/profile",
+							element: <Profile />,
+						},
+					],
+				},
+				{
+					path: "/login",
 					element: <Login />,
 				},
 				{
 					path: "/signup",
 					element: <Signup />,
-				},
-				{
-					path: "/profile",
-					element: <Profile />,
 				},
 			],
 		},

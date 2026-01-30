@@ -20,3 +20,15 @@ export const getOauthApp = async (appId?: string): Promise<TOauthApp> => {
 
 	return data.apps[0];
 };
+
+export const getAuthCapabilities = async (): Promise<string[]> => {
+	const url = new URL(`/auth/api/capabilities`, apiOrigin);
+
+	const res = await fetch(url, {
+		method: "get",
+	});
+
+	const data = (await res.json()) as { capabilities: string[] };
+
+	return data.capabilities;
+};

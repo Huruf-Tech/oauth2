@@ -2,7 +2,8 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import React from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -30,15 +31,19 @@ const DefaultForm = {
 
 function CredentialsForm() {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = React.useState(false);
 	const { control, register, handleSubmit, formState } = useForm<
 		typeof DefaultForm
 	>({ defaultValues: DefaultForm });
 
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-		await authClient.signIn.email({
+		const Response = await authClient.signIn.email({
 			...data,
 		});
+
+		if (Response.error === null) navigate("/");
+		else toast.error(Response.error.message);
 	};
 
 	return (
@@ -49,6 +54,7 @@ function CredentialsForm() {
 					<Input
 						id="email"
 						type="email"
+						autoComplete="email webauthn"
 						placeholder="m@example.com"
 						{...register("email", {
 							validate: (value) =>
@@ -66,6 +72,7 @@ function CredentialsForm() {
 					<InputGroup>
 						<InputGroupInput
 							id="password"
+							autoComplete="current-password webauthn"
 							type={showPassword ? "text" : "password"}
 							{...register("password", {
 								required: t("Password is required!"),
@@ -96,12 +103,10 @@ function CredentialsForm() {
 						</Field>
 					)}
 				/>
-				<Field>
-					<Button type="submit">
-						{formState.isSubmitting && <Spinner />}
-						{t("Login")}
-					</Button>
-				</Field>
+				<Button type="submit">
+					{formState.isSubmitting && <Spinner />}
+					{t("Login")}
+				</Button>
 			</FieldGroup>
 		</form>
 	);
