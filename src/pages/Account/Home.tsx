@@ -1,0 +1,182 @@
+import {
+	BlocksIcon,
+	CheckCircle2,
+	Contact2,
+	HomeIcon,
+	ImageIcon,
+	Mail,
+	Shield,
+	ShieldCheck,
+	SquareAsteriskIcon,
+	Users2,
+	XCircle,
+} from "lucide-react";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import {
+	TabButton,
+	TabContent,
+	TabPanel,
+	Tabs,
+	TabsList,
+} from "@/components/Tabs";
+import { authClient } from "@/lib/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, getInitials } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import Item from "@/components/Item";
+import { Badge } from "@/components/ui/badge";
+import OAuth2 from "@/components/custom-icons/oauth2";
+import OAuth from "./Oauth";
+import Security from "./Security";
+
+const tabs = [
+	{ id: "home", icon: HomeIcon, label: "Home" },
+	{ id: "personal", icon: Contact2, label: "Personal info" },
+	{ id: "security", icon: Shield, label: "Security & Sign-in" },
+	{
+		id: "changePassword",
+		icon: SquareAsteriskIcon,
+		label: "Change password",
+	},
+	{
+		id: "oauth2",
+		icon: OAuth2,
+		label: "OAuth2",
+	},
+	{ id: "integrations", icon: BlocksIcon, label: "Integrations" },
+	{ id: "collaborators", icon: Users2, label: "Collaborators" },
+];
+
+function Home() {
+	const { t } = useTranslation();
+	const [tab, setTab] = React.useState("home");
+
+	const { data } = authClient.useSession();
+
+	const fullName = data?.user?.name || "Unamed";
+	const verified = data?.user?.emailVerified;
+
+	return (
+		<div className="w-full h-full bg-muted-foreground/5 dark:bg-muted/30">
+			<Tabs defaultValue={tab} onValueChange={setTab}>
+				<TabsList className="w-full max-w-fit mx-auto">
+					{tabs.map((tab) => (
+						<TabButton key={tab.id} value={tab.id}>
+							<tab.icon /> {tab.label}
+						</TabButton>
+					))}
+				</TabsList>
+
+				<TabPanel className="w-full h-[calc(100svh-68px)] py-10">
+					<TabContent value={"home"}>
+						<div className="flex flex-col gap-2 items-center justify-start h-full pt-20">
+							<Avatar className={"size-36 border"}>
+								<AvatarImage src={data?.user?.image ?? undefined} />
+								<AvatarFallback className="text-xl">
+									{getInitials(fullName)}
+								</AvatarFallback>
+							</Avatar>
+
+							<h3 className="text-xl font-medium">{fullName}</h3>
+							<p>{data?.user?.email}</p>
+						</div>
+					</TabContent>
+					<TabContent value={"personal"}>
+						<div className="flex flex-col gap-5 items-start w-full h-full px-3 max-w-lg mx-auto">
+							<div className="flex items-center justify-between gap-3 w-full">
+								<div className="flex flex-col gap-2">
+									<h3 className="text-xl font-medium">{t("Personal info")}</h3>
+									<p className="text-sm text-muted-foreground">
+										{t("Manage details that make App work better for you")}
+									</p>
+								</div>
+
+								<Button variant={"secondary"}>{t("Edit")}</Button>
+							</div>
+
+							{/* list */}
+							<div className="flex flex-col gap-1 grow w-full">
+								{[
+									{
+										icon: ImageIcon,
+										label: "Profile picture",
+										content: (
+											<Avatar className="size-14 border">
+												<AvatarImage src={data?.user?.image ?? undefined} />
+												<AvatarFallback className="text-xl">
+													{getInitials(fullName)}
+												</AvatarFallback>
+											</Avatar>
+										),
+									},
+									{
+										icon: Contact2,
+										label: "Name",
+										content: fullName,
+									},
+									{
+										icon: Mail,
+										label: "Email",
+										content: data?.user?.email,
+									},
+									{
+										icon: ShieldCheck,
+										label: "Email verified",
+										orientation: "vertical",
+										content: (
+											<Badge
+												className={cn(
+													verified
+														? "bg-green-200 text-green-700 dark:bg-green-950 dark:text-green-500"
+														: "bg-red-200 text-red-700 dark:bg-red-950 dark:text-red-500",
+												)}
+											>
+												{verified ? (
+													<CheckCircle2 className="fill-green-500 stroke-background" />
+												) : (
+													<XCircle className="fill-red-500 stroke-background" />
+												)}
+												{t(verified ? "Verified" : "Unverified")}
+											</Badge>
+										),
+									},
+								].map((item, index) => (
+									<Item key={index}>
+										<div className="flex items-center gap-3">
+											<item.icon />
+											<div className="flex flex-col">
+												<h3 className="font-medium">{t(item.label)}</h3>
+												{typeof item.content === "string" ? (
+													<p className="text-sm text-muted-foreground">
+														{item.content}
+													</p>
+												) : item?.orientation === "vertical" ? (
+													item.content
+												) : null}
+											</div>
+										</div>
+
+										{typeof item.content !== "string" &&
+											item?.orientation !== "vertical" &&
+											item.content}
+									</Item>
+								))}
+							</div>
+						</div>
+					</TabContent>
+					<TabContent value={"security"}>
+						<Security />
+					</TabContent>
+					<TabContent value={"changePassword"}>Change Password</TabContent>
+					<TabContent value={"oauth2"}>
+						<OAuth />
+					</TabContent>
+					<TabContent value={"integrations"}>Integrations</TabContent>
+					<TabContent value={"collaborators"}>Collaborators</TabContent>
+				</TabPanel>
+			</Tabs>
+		</div>
+	);
+}
+export default Home;

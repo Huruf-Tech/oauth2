@@ -26,6 +26,8 @@ import { cn } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 
+type ProviderKey = keyof typeof authProviders;
+
 function Login() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -44,6 +46,16 @@ function Login() {
 		() => capabilities?.includes("magicLink"),
 		[capabilities],
 	);
+
+	const enabledProviders = React.useMemo(() => {
+		const caps = new Set(capabilities ?? []);
+		return (
+			Object.entries(authProviders) as [
+				ProviderKey,
+				(typeof authProviders)[ProviderKey],
+			][]
+		).filter(([key]) => caps.has(key)); // if capabilities isn't typed as ProviderKey[], see note below
+	}, [capabilities]);
 
 	React.useEffect(() => {
 		if (magicLink) setShowMagicLink(true);
@@ -68,36 +80,35 @@ function Login() {
 						<FieldGroup className="pb-2">
 							<Field>
 								<div className="flex gap-3 flex-wrap">
-									{Object.entries(authProviders).map(
-										([key, { icon, label, invert }]) =>
-											capabilities?.includes(key) ? (
-												<Button
-													variant="outline"
-													type="button"
-													key={key}
-													className={"grow"}
-													onClick={async () => {
-														const Response = await authClient.signIn.social({
-															provider: key,
-															callbackURL: window.location.href,
-														});
+									{enabledProviders.map(([key, { icon, label, invert }]) => (
+										<Button
+											variant="outline"
+											type="button"
+											key={key}
+											className={"grow"}
+											onClick={async () => {
+												const Response = await authClient.signIn.social({
+													provider: key,
+													callbackURL: window.location.href,
+												});
 
-														if (Response.error === null) navigate("/");
-													}}
-												>
-													<img
-														src={icon}
-														className={cn(invert && "dark:invert")}
-														alt={label}
-													/>
-													{t("Sign in with {{provider}}", { provider: label })}
-												</Button>
-											) : null,
-									)}
+												if (Response.error === null) navigate("/");
+											}}
+										>
+											<img
+												src={icon}
+												className={cn(invert && "dark:invert")}
+												alt={label}
+											/>
+											{t("Sign in with {{provider}}", { provider: label })}
+										</Button>
+									))}
 								</div>
 							</Field>
 
-							<FieldSeparator>{t("Or continue with")}</FieldSeparator>
+							{enabledProviders.length > 0 && (
+								<FieldSeparator>{t("Or continue with")}</FieldSeparator>
+							)}
 
 							<Field>
 								{showMagicLink ? <MagicLinkForm /> : <CredentialsForm />}

@@ -17,3 +17,10 @@ export function applyThemeVars(vars: ThemeVars) {
 export function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+export function getInitials(name?: string) {
+	const [first, ...last] = name || "unamed";
+	return !last
+		? first.substring(0, 2).toUpperCase()
+		: `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
+}

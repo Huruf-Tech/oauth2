@@ -6,14 +6,17 @@ import "./index.css";
 import "../i18n";
 import App from "./App";
 import Account from "./pages/Account";
+import Home from "./pages/Account/Home";
 import Profile from "./pages/Account/Profile";
+import ChangePassword from "./pages/ChangePassword";
+import ForgotPassword from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
 const router = createBrowserRouter(
 	[
 		{
-			path: "/",
+			path: "",
 			element: <App />,
 			children: [
 				{
@@ -25,6 +28,10 @@ const router = createBrowserRouter(
 					element: <Account />,
 					children: [
 						{
+							index: true,
+							element: <Home />,
+						},
+						{
 							path: "/account/profile",
 							element: <Profile />,
 						},
@@ -33,6 +40,14 @@ const router = createBrowserRouter(
 				{
 					path: "/login",
 					element: <Login />,
+				},
+				{
+					path: "/change-password",
+					element: <ChangePassword />,
+				},
+				{
+					path: "/forgot-password",
+					element: <ForgotPassword />,
 				},
 				{
 					path: "/signup",

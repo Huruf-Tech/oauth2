@@ -6,6 +6,7 @@ import { useFavicon } from "./hooks/useFavicon";
 import { useLanguage } from "./hooks/useLanguage";
 import { useOauthApp } from "./hooks/useOauthApp";
 import { applyThemeVars } from "./lib/utils";
+import { DirectionProvider } from "./components/ui/direction";
 
 function App() {
 	const [searchParams] = useSearchParams();
@@ -13,15 +14,17 @@ function App() {
 
 	useFavicon(app?.logo);
 	const { scheme } = useColorScheme(searchParams.get("theme") as TScheme);
-	useLanguage(searchParams.get("lng"));
+	const { direction } = useLanguage(searchParams.get("lng"));
 
 	React.useEffect(() => {
 		if (app?.theme) applyThemeVars(app.theme);
 	}, [app]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 bg-linear-to-t from-primary/10 to-transparent to-40% h-full">
-			<Outlet />
+		<DirectionProvider direction={direction}>
+			<div className="flex w-full h-full min-h-svh flex-col items-center justify-center gap-5 bg-linear-to-t from-primary/10 to-transparent to-40%">
+				<Outlet />
+			</div>
 
 			<Toaster
 				theme={scheme}
@@ -36,7 +39,7 @@ function App() {
 					},
 				}}
 			/>
-		</div>
+		</DirectionProvider>
 	);
 }
 export default App;

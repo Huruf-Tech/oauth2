@@ -5,10 +5,6 @@ function Account() {
 	const { data, isPending } = authClient.useSession();
 	if (!data && !isPending) return <Navigate to="/login" />;
 
-	return (
-		<>
-			<Outlet />
-		</>
-	);
+	return <Outlet />;
 }
 export default Account;

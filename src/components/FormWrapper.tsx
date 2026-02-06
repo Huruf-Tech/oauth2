@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import HurufLogo from "@/assets/huruf-logo.png";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useOauthApp } from "@/hooks/useOauthApp";
@@ -25,7 +26,7 @@ function FormWrapper({
 	const loading = isLoading || capLoading;
 
 	return (
-		<div className="flex w-full max-w-sm flex-col gap-3">
+		<div className="flex w-full max-w-sm flex-col gap-3 px-3">
 			<title>
 				{loading
 					? t("Loading OAuth")
@@ -39,12 +40,12 @@ function FormWrapper({
 					{loading ? (
 						<Skeleton className="w-16 h-16" />
 					) : (
-						<a href={app?.homepageURL}>
+						<Link to="/">
 							<AvatarImage src={logo} alt={appName} />
 							<AvatarFallback>
 								<AvatarImage src={HurufLogo} alt={"Huruf tech"} />
 							</AvatarFallback>
-						</a>
+						</Link>
 					)}
 				</Avatar>
 			</div>

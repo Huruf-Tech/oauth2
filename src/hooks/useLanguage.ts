@@ -1,20 +1,26 @@
 import i18n from "i18next";
 import React from "react";
 
-export function useLanguage(lng?: string | null) {
-	const language = lng ?? "en";
+export function useLanguage(value?: string | null) {
+	const language = value ?? "en";
 	const HTMLElement = document.querySelector("html");
 
-	const currentLanguage = React.useMemo(() => {
-		HTMLElement?.setAttribute(
-			"dir",
-			["en", "fr", "de", "es", "it", "pl"].includes(language) ? "ltr" : "rtl",
-		);
+	const { lng, dir } = React.useMemo<{
+		lng: string;
+		dir: "rtl" | "ltr";
+	}>(() => {
+		const direction = ["en", "fr", "de", "es", "it", "pl"].includes(language)
+			? "ltr"
+			: "rtl";
 
-		if (language === i18n.language) return;
+		HTMLElement?.setAttribute("dir", direction);
 
-		void i18n.changeLanguage(language);
+		if (language === i18n.language) return { lng: language, dir: direction };
+
+		void i18n.changeLanguage(language).catch(console.error);
+
+		return { lng: language, dir: direction };
 	}, [language, HTMLElement]);
 
-	return currentLanguage;
+	return { language: lng, direction: dir };
 }

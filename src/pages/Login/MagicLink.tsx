@@ -27,11 +27,14 @@ function MagicLinkForm() {
 	});
 
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-		const Response = await authClient.signIn.magicLink({ email: data.email });
+		const Response = await authClient.signIn.magicLink({
+			email: data.email,
+			callbackURL: window.location.origin,
+		});
 
 		if (Response.error) toast.error(Response.error.message);
 		else {
-			reset();
+			reset({ email: "" });
 			toast.success(t("A Magic Link has been sent to your mailbox!"));
 		}
 	};

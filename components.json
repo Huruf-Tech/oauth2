@@ -22,5 +22,6 @@
   },
   "registries": {
     "@coss": "https://coss.com/ui/r/{name}.json"
-  }
+  },
+  "rtl": true
 }
