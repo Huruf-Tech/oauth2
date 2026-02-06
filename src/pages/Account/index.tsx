@@ -8,8 +8,6 @@ function Account() {
 	if (!data && !isPending)
 		return <Navigate to={"/login" + window.location.search} />;
 
-	shouldRedirect(!!data && !isPending);
-
-	return <Outlet />;
+	if (!shouldRedirect()) return <Outlet />;
 }
 export default Account;
