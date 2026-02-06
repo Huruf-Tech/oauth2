@@ -64,7 +64,7 @@ function Login() {
 	const { data, isPending } = authClient.useSession();
 
 	if (data && !isPending) {
-		return <Navigate to={"/account" + window.location.search} />;
+		return <Navigate to={"/" + window.location.search} />;
 	}
 
 	return (

@@ -97,7 +97,7 @@ function Security() {
 				}),
 			},
 		],
-		[t, data, isLoading, app, mutate],
+		[t, isLoading, app, mutate, passkeyCount],
 	);
 
 	return (

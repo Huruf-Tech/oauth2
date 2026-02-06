@@ -12,6 +12,7 @@ import ChangePassword from "./pages/ChangePassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Consent from "./pages/Consent";
 
 const router = createBrowserRouter(
 	[
@@ -34,6 +35,10 @@ const router = createBrowserRouter(
 						{
 							path: "/account/profile",
 							element: <Profile />,
+						},
+						{
+							path: "/account/consent",
+							element: <Consent />,
 						},
 					],
 				},
