@@ -43,7 +43,7 @@ function Login() {
 	);
 
 	const passkey = React.useMemo(
-		() => capabilities?.includes("magicLink"),
+		() => capabilities?.includes("passkey"),
 		[capabilities],
 	);
 
@@ -62,7 +62,7 @@ function Login() {
 	}, [magicLink]);
 
 	const { data, isPending } = authClient.useSession();
-	if (data && !isPending) return <Navigate to="/" />;
+	if (data && !isPending) return <Navigate to={import.meta.env.BASE_URL} />;
 
 	return (
 		<FormWrapper title={t("Login")}>
@@ -92,7 +92,7 @@ function Login() {
 													callbackURL: window.location.href,
 												});
 
-												if (Response.error === null) navigate("/");
+												if (!Response.error) navigate(import.meta.env.BASE_URL);
 											}}
 										>
 											<img
