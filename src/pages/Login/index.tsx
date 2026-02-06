@@ -1,7 +1,7 @@
 import { KeyIcon } from "lucide-react";
 import React from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate, redirect } from "react-router";
 import FormCrash from "@/components/FormCrash";
 import FormWrapper from "@/components/FormWrapper";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,15 @@ function Login() {
 	const { data, isPending } = authClient.useSession();
 
 	if (data && !isPending) {
+		if (new URLSearchParams(window.location.search).has("client_id")) {
+			throw redirect(
+				new URL(
+					"/auth/api/oauth2/authorize" + window.location.search,
+					import.meta.env.VITE_API_ORIGIN,
+				).toString(),
+			);
+		}
+
 		return <Navigate to={"/" + window.location.search} />;
 	}
 

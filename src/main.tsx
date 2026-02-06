@@ -36,11 +36,11 @@ const router = createBrowserRouter(
 							path: "/account/profile",
 							element: <Profile />,
 						},
-						{
-							path: "/account/consent",
-							element: <Consent />,
-						},
 					],
+				},
+				{
+					path: "/consent",
+					element: <Consent />,
 				},
 				{
 					path: "/login",
