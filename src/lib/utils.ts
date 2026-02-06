@@ -30,5 +30,11 @@ export function shouldRedirect(allow = true) {
 
 	const redirect_uri = query.get("redirect_uri");
 
-	if (redirect_uri && allow) window.location.href = redirect_uri;
+	if (redirect_uri && allow) {
+		window.location.href = redirect_uri;
+
+		return true;
+	}
+
+	return false;
 }
