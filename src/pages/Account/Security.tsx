@@ -20,24 +20,11 @@ function Security() {
 
 	const { app } = useOauthApp();
 
-	//   const { data, isLoading } = useSWR(
-	//     "oauth2Clients",
-	//     () =>
-	//       new Promise((resolve, reject) => {
-	//         authClient.passkey
-	//           .listUserPasskeys()
-	//           .then(({ data, error }) => {
-	//             if (error) reject(error);
-
-	//             resolve(data);
-	//           })
-	//           .catch(reject);
-	//       }),
-	//   );
-
 	const { data, isLoading, mutate } = useSWR("oauthPasskeyList", () =>
 		authClient.passkey.listUserPasskeys(),
 	);
+
+	const passkeyCount = data?.data?.length ?? 0;
 
 	const SecurityMethods = React.useMemo(
 		() => [
@@ -64,8 +51,8 @@ function Security() {
 				content: isLoading ? (
 					<Skeleton className="w-30 h-5" />
 				) : (
-					t(data?.data?.length ? "{{count}} passkeys" : "No passkey setup", {
-						count: data?.data?.length ?? 0,
+					t(passkeyCount > 0 ? "{{count}} passkeys" : "No passkey setup", {
+						count: passkeyCount,
 					})
 				),
 				right: () => {
@@ -96,7 +83,7 @@ function Security() {
 								}
 							}}
 						>
-							{t("Setup")}
+							{t(passkeyCount > 0 ? "Add new" : "Setup")}
 						</Button>
 					);
 				},
