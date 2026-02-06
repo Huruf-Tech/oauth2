@@ -1,5 +1,6 @@
 import FormCrash from "@/components/FormCrash";
 import FormWrapper from "@/components/FormWrapper";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -9,8 +10,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Field, FieldDescription } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
+import { EllipsisIcon } from "lucide-react";
+import React from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -20,12 +24,19 @@ function Consent() {
 	const { t } = useTranslation();
 	const [searchParams] = useSearchParams();
 
-	//   const navigate = useNavigate();
+	const { data, error, isLoading } = useSWR("oauth2Client", () =>
+		authClient.oauth2.getClient({
+			query: { client_id: searchParams.get("client_id") ?? "" },
+		}),
+	);
 
-	const clientId = searchParams.get("client_id");
-
-	const { data, error } = useSWR("oauth2Client", () =>
-		authClient.oauth2.getClient({ query: { client_id: clientId ?? "" } }),
+	const scopes = React.useMemo(
+		() =>
+			searchParams
+				.get("scopes")
+				?.split(",")
+				.map((s) => s.trim()) ?? ["email", "profile"],
+		[searchParams],
 	);
 
 	async function consentAction(action: boolean) {
@@ -39,8 +50,31 @@ function Consent() {
 		if (data.redirect) window.location.href = data.uri;
 	}
 
+	const client = data?.data;
+	const clientName = client?.client_name;
+
 	return (
-		<FormWrapper title={t("Authorize access")}>
+		<FormWrapper
+			title={t("Authorize access")}
+			consentLogo={
+				<React.Fragment>
+					<Avatar className="rounded-xl size-16 bg-transparent">
+						{isLoading ? (
+							<Skeleton className="w-16 h-16" />
+						) : (
+							<React.Fragment>
+								<AvatarImage src={client?.logo_uri} alt={clientName} />
+								<AvatarFallback className="rounded-md">
+									{getInitials(clientName)}
+								</AvatarFallback>
+							</React.Fragment>
+						)}
+					</Avatar>
+
+					<EllipsisIcon className="text-muted-foreground" />
+				</React.Fragment>
+			}
+		>
 			<div className={cn("flex flex-col gap-5")}>
 				<Card className="relative">
 					<FormCrash error={error} />
@@ -48,7 +82,7 @@ function Consent() {
 					<CardHeader>
 						<CardTitle className="text-xl">
 							{t("Authorize {{app_name}}", {
-								app_name: data?.data?.client_name,
+								app_name: clientName,
 							})}
 						</CardTitle>
 					</CardHeader>
@@ -57,15 +91,18 @@ function Consent() {
 							{t("Third-party is requesting access to:")}
 						</p>
 						<ul className="px-5 py-2 list-disc indent-1">
-							{[
-								"Your email address, phone number",
-								"Your name and avatar",
-								"Your organization list and roles",
-							].map((access, index) => (
-								<li key={index} className="py-1 text-muted-foreground">
-									{access}
-								</li>
-							))}
+							{Object.entries({
+								email: "Access email address",
+								profile: "Access details about your profile",
+								openid: "Access your identity documents",
+								offline_access: "Read and edit your account resources",
+							})
+								.filter(([key]) => scopes?.includes(key))
+								.map(([, value], index) => (
+									<li key={index} className="py-1 text-muted-foreground">
+										{value}
+									</li>
+								))}
 						</ul>
 
 						<Field orientation={"horizontal"} className="grow w-full">
@@ -86,11 +123,11 @@ function Consent() {
 							<Trans i18nKey={"agreement"}>
 								By authorize the access, you also agree with our third-party
 								apps{" "}
-								<a href="#" className="text-primary">
+								<a href={client?.tos_uri} className="text-primary">
 									Terms of Service
 								</a>{" "}
 								and{" "}
-								<a href="#" className="text-primary">
+								<a href={client?.policy_uri} className="text-primary">
 									Privacy Policy
 								</a>
 								.

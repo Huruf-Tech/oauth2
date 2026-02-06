@@ -12,9 +12,11 @@ import { Skeleton } from "./ui/skeleton";
 function FormWrapper({
 	children,
 	title,
+	consentLogo,
 }: {
 	children: React.ReactNode;
 	title: string;
+	consentLogo?: React.ReactNode;
 }) {
 	const { t } = useTranslation();
 	const { isLoading, app, error } = useOauthApp();
@@ -36,6 +38,7 @@ function FormWrapper({
 			</title>
 
 			<div className="flex items-center gap-3 self-center">
+				{consentLogo}
 				<Avatar className="rounded-xl size-16 bg-transparent">
 					{loading ? (
 						<Skeleton className="w-16 h-16" />
