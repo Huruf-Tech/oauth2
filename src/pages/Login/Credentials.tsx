@@ -2,7 +2,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import React from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +31,6 @@ const DefaultForm = {
 
 function CredentialsForm() {
 	const { t } = useTranslation();
-	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = React.useState(false);
 	const { control, register, handleSubmit, formState } = useForm<
 		typeof DefaultForm
@@ -42,8 +41,7 @@ function CredentialsForm() {
 			...data,
 		});
 
-		if (Response.error === null) navigate("/");
-		else toast.error(Response.error.message);
+		if (Response.error) toast.error(Response.error.message);
 	};
 
 	return (
