@@ -67,9 +67,9 @@ function Login() {
 		if (new URLSearchParams(window.location.search).has("client_id")) {
 			throw redirect(
 				new URL(
-					"/auth/api/oauth2/authorize" + window.location.search,
+					"/auth/api/oauth2/authorize",
 					import.meta.env.VITE_API_ORIGIN,
-				).toString(),
+				).toString() + window.location.search,
 			);
 		}
 
