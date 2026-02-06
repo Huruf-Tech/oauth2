@@ -1,9 +1,9 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-// import { toast } from "sonner";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-// import { authClient } from "@/lib/auth";
+import { authClient } from "@/lib/auth";
 import { isValidEmail } from "@/lib/utils";
 
 const DefaultForm = {
@@ -32,33 +32,32 @@ const DefaultForm = {
 function CredentialsForm() {
 	const { t } = useTranslation();
 	const [showPassword, setShowPassword] = React.useState(false);
-	const { control, register, formState } = useForm<typeof DefaultForm>({
-		defaultValues: DefaultForm,
-	});
+	const { control, register, handleSubmit, formState } = useForm<
+		typeof DefaultForm
+	>({ defaultValues: DefaultForm });
 
-	// const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-	//   const Response = await authClient.signIn.email({
-	//     ...data,
-	//     callbackURL: import.meta.env.BASE_URL + "account",
-	//     fetchOptions: {
-	//       onSuccess(ctx) {
-	//         if (ctx.response.redirected) {
-	//           window.location.href = ctx.response.url;
-	//           return;
-	//         }
-	//       },
-	//     },
-	//   });
+	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
+		const Response = await authClient.signIn.email({
+			...data,
+			callbackURL: import.meta.env.BASE_URL + "account",
+			fetchOptions: {
+				onSuccess(ctx) {
+					if (ctx.response.redirected) {
+						window.location.href = ctx.response.url;
+						return;
+					}
+				},
+				headers: {
+					accept: "application/json",
+				},
+			},
+		});
 
-	//   if (Response.error) toast.error(Response.error.message);
-	// };
+		if (Response.error) toast.error(Response.error.message);
+	};
 
 	return (
-		<form
-			action={"/auth/api/sign-in/email" + window.location.search}
-			method="POST"
-			// onSubmit={handleSubmit(onSubmit)}
-		>
+		<form onSubmit={handleSubmit(onSubmit)}>
 			<FieldGroup>
 				<Field>
 					<FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
