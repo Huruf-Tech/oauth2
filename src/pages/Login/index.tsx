@@ -22,7 +22,7 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import { useOauthApp } from "@/hooks/useOauthApp";
 import { authClient } from "@/lib/auth";
 import { authProviders } from "@/lib/providers";
-import { cn } from "@/lib/utils";
+import { cn, shouldRedirect } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 
@@ -62,7 +62,10 @@ function Login() {
 	}, [magicLink]);
 
 	const { data, isPending } = authClient.useSession();
-	if (data && !isPending)
+
+	if (data && !isPending) {
+		shouldRedirect();
+
 		return (
 			<Navigate
 				to={
@@ -70,6 +73,7 @@ function Login() {
 				}
 			/>
 		);
+	}
 
 	return (
 		<FormWrapper title={t("Login")}>

@@ -24,3 +24,11 @@ export function getInitials(name?: string) {
 		? first.substring(0, 2).toUpperCase()
 		: `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
 }
+
+export function shouldRedirect(allow = true) {
+	const query = new URLSearchParams();
+
+	const redirect_uri = query.get("redirect_uri");
+
+	if (redirect_uri && allow) window.location.href = redirect_uri;
+}
