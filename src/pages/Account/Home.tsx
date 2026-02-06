@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import OAuth2 from "@/components/custom-icons/oauth2";
 import OAuth from "./Oauth";
 import Security from "./Security";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 const tabs = [
 	{ id: "home", icon: HomeIcon, label: "Home" },
@@ -50,6 +52,7 @@ const tabs = [
 
 function Home() {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [tab, setTab] = React.useState("home");
 
 	const { data } = authClient.useSession();
@@ -80,6 +83,21 @@ function Home() {
 
 							<h3 className="text-xl font-medium">{fullName}</h3>
 							<p>{data?.user?.email}</p>
+
+							<Button
+								onClick={async () => {
+									const { error } = await authClient.signOut();
+
+									if (error) {
+										toast.error(error.message);
+										return;
+									}
+
+									navigate("/login");
+								}}
+							>
+								{t("Logout")}
+							</Button>
 						</div>
 					</TabContent>
 					<TabContent value={"personal"}>
