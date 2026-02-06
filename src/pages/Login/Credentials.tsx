@@ -39,6 +39,7 @@ function CredentialsForm() {
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
 		const Response = await authClient.signIn.email({
 			...data,
+			callbackURL: "/account",
 		});
 
 		if (Response.error) toast.error(Response.error.message);
