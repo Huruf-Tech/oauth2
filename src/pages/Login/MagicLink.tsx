@@ -29,7 +29,10 @@ function MagicLinkForm() {
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
 		const Response = await authClient.signIn.magicLink({
 			email: data.email,
-			callbackURL: window.location.origin,
+			callbackURL: new URL(
+				import.meta.env.BASE_URL,
+				window.location.origin,
+			).toString(),
 		});
 
 		if (Response.error) toast.error(Response.error.message);

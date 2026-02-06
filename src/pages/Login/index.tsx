@@ -62,7 +62,7 @@ function Login() {
 	}, [magicLink]);
 
 	const { data, isPending } = authClient.useSession();
-	if (data && !isPending) return <Navigate to={import.meta.env.BASE_URL} />;
+	if (data && !isPending) return <Navigate to={"/"} />;
 
 	return (
 		<FormWrapper title={t("Login")}>
@@ -92,7 +92,7 @@ function Login() {
 													callbackURL: window.location.href,
 												});
 
-												if (!Response.error) navigate(import.meta.env.BASE_URL);
+												if (!Response.error) navigate("/");
 											}}
 										>
 											<img
