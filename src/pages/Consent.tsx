@@ -31,11 +31,7 @@ function Consent() {
 	);
 
 	const scopes = React.useMemo(
-		() =>
-			searchParams
-				.get("scopes")
-				?.split(",")
-				.map((s) => s.trim()) ?? ["email", "profile"],
+		() => searchParams.get("scopes")?.trim()?.split(/\s+/),
 		[searchParams],
 	);
 
