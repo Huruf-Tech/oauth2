@@ -36,6 +36,7 @@ function OAuth() {
 							type: "web",
 							client_name: "test client",
 							redirect_uris: ["https://google.com"],
+							token_endpoint_auth_method: "none",
 						});
 
 						console.log(data, error);
