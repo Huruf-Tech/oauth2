@@ -25,7 +25,7 @@ function Consent() {
 	const [searchParams] = useSearchParams();
 
 	const { data, error, isLoading } = useSWR("oauth2Client", () =>
-		authClient.oauth2.getClient({
+		authClient.oauth2.publicClient({
 			query: { client_id: searchParams.get("client_id") ?? "" },
 		}),
 	);
