@@ -33,10 +33,12 @@ function OAuth() {
 					variant={"secondary"}
 					onClick={async () => {
 						const { data, error } = await authClient.oauth2.createClient({
-							type: "web",
 							client_name: "test client",
 							redirect_uris: ["https://google.com"],
 							token_endpoint_auth_method: "none",
+							grant_types: ["authorization_code", "refresh_token"],
+							response_types: ["code"],
+							scope: "openid profile email offline_access",
 						});
 
 						console.log(data, error);
