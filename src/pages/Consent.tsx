@@ -36,7 +36,7 @@ function Consent() {
 			return;
 		}
 
-		console.log(data);
+		if (data.redirect) window.location.href = data.uri;
 	}
 
 	return (
