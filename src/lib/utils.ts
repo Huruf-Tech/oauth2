@@ -26,7 +26,7 @@ export function getInitials(name?: string) {
 }
 
 export function shouldRedirect(allow = true) {
-	const query = new URLSearchParams();
+	const query = new URLSearchParams(window.location.search);
 
 	const redirect_uri = query.get("redirect_uri");
 
