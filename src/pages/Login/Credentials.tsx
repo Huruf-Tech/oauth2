@@ -40,6 +40,14 @@ function CredentialsForm() {
 		const Response = await authClient.signIn.email({
 			...data,
 			callbackURL: import.meta.env.BASE_URL + "account",
+			fetchOptions: {
+				onSuccess(ctx) {
+					if (ctx.response.redirected) {
+						window.location.href = ctx.response.url;
+						return;
+					}
+				},
+			},
 		});
 
 		if (Response.error) toast.error(Response.error.message);
