@@ -66,13 +66,7 @@ function Login() {
 	if (data && !isPending) {
 		shouldRedirect();
 
-		return (
-			<Navigate
-				to={
-					new URLSearchParams(window.location.search).get("redirect_uri") ?? "/"
-				}
-			/>
-		);
+		return <Navigate to={"/account" + window.location.search} />;
 	}
 
 	return (
