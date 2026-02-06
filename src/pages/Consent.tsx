@@ -13,17 +13,31 @@ import { authClient } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 function Consent() {
 	const { t } = useTranslation();
 	const [searchParams] = useSearchParams();
 
+	//   const navigate = useNavigate();
+
 	const clientId = searchParams.get("client_id");
 
 	const { data, error } = useSWR("oauth2Client", () =>
 		authClient.oauth2.getClient({ query: { client_id: clientId ?? "" } }),
 	);
+
+	async function consentAction(action: boolean) {
+		const { data, error } = await authClient.oauth2.consent({ accept: action });
+
+		if (error) {
+			toast.error(error.message);
+			return;
+		}
+
+		console.log(data);
+	}
 
 	return (
 		<FormWrapper title={t("Authorize access")}>
@@ -33,7 +47,9 @@ function Consent() {
 
 					<CardHeader>
 						<CardTitle className="text-xl">
-							{t("Authorize {{app_name}}", { app_name: data?.data })}
+							{t("Authorize {{app_name}}", {
+								app_name: data?.data?.client_name,
+							})}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
@@ -53,10 +69,16 @@ function Consent() {
 						</ul>
 
 						<Field orientation={"horizontal"} className="grow w-full">
-							<Button variant={"outline"} className={"grow"}>
+							<Button
+								variant={"outline"}
+								className={"grow"}
+								onClick={() => consentAction(false)}
+							>
 								{t("Cancel")}
 							</Button>
-							<Button className={"grow"}>{t("Authorize")}</Button>
+							<Button className={"grow"} onClick={() => consentAction(true)}>
+								{t("Authorize")}
+							</Button>
 						</Field>
 					</CardContent>
 					<CardFooter>
