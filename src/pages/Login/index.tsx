@@ -22,7 +22,7 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import { useOauthApp } from "@/hooks/useOauthApp";
 import { authClient } from "@/lib/auth";
 import { authProviders } from "@/lib/providers";
-import { cn, shouldRedirect } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 
@@ -64,8 +64,6 @@ function Login() {
 	const { data, isPending } = authClient.useSession();
 
 	if (data && !isPending) {
-		if (shouldRedirect()) return;
-
 		return <Navigate to={"/account" + window.location.search} />;
 	}
 
