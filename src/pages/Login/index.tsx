@@ -62,7 +62,14 @@ function Login() {
 	}, [magicLink]);
 
 	const { data, isPending } = authClient.useSession();
-	if (data && !isPending) return <Navigate to={"/"} />;
+	if (data && !isPending)
+		return (
+			<Navigate
+				to={
+					new URLSearchParams(window.location.search).get("redirect_uri") ?? "/"
+				}
+			/>
+		);
 
 	return (
 		<FormWrapper title={t("Login")}>
