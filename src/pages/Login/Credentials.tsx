@@ -47,9 +47,9 @@ function CredentialsForm() {
 						return;
 					}
 				},
-				headers: {
-					accept: "application/json",
-				},
+				// headers: {
+				// 	accept: "application/json",
+				// },
 			},
 		});
 
