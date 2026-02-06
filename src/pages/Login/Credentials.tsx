@@ -55,7 +55,7 @@ function CredentialsForm() {
 
 	return (
 		<form
-			action="/auth/api/sign-in/email"
+			action={"/auth/api/sign-in/email" + window.location.search}
 			method="POST"
 			// onSubmit={handleSubmit(onSubmit)}
 		>
