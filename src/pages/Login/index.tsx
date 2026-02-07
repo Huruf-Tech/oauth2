@@ -61,7 +61,7 @@ function Login() {
 		if (magicLink) setShowMagicLink(true);
 	}, [magicLink]);
 
-	//   const { data, isPending } = authClient.useSession();
+	const { data } = authClient.useSession();
 
 	//   if (data && !isPending) {
 	//     if (new URLSearchParams(window.location.search).has("client_id")) {
@@ -77,6 +77,8 @@ function Login() {
 
 	//     return <Navigate to={"/" + window.location.search} />;
 	//   }
+
+	console.log(data);
 
 	return (
 		<FormWrapper title={t("Login")}>
