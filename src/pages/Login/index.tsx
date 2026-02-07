@@ -25,6 +25,7 @@ import { authProviders } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
+import { toast } from "sonner";
 
 type ProviderKey = keyof typeof authProviders;
 
@@ -60,25 +61,6 @@ function Login() {
 	React.useEffect(() => {
 		if (magicLink) setShowMagicLink(true);
 	}, [magicLink]);
-
-	const { data } = authClient.useSession();
-
-	//   if (data && !isPending) {
-	//     if (new URLSearchParams(window.location.search).has("client_id")) {
-	//       // eslint-disable-next-line react-hooks/immutability
-	//       window.location.href =
-	//         new URL(
-	//           "/auth/api/oauth2/authorize",
-	//           import.meta.env.VITE_API_ORIGIN,
-	//         ).toString() + window.location.search;
-
-	//       return;
-	//     }
-
-	//     return <Navigate to={"/" + window.location.search} />;
-	//   }
-
-	console.log(data);
 
 	return (
 		<FormWrapper title={t("Login")}>
@@ -148,7 +130,16 @@ function Login() {
 							{passkey && (
 								<Button
 									variant={"secondary"}
-									onClick={async () => await authClient.signIn.passkey()}
+									onClick={async () => {
+										const { error } = await authClient.signIn.passkey();
+
+										if (error) {
+											toast.error(error.message);
+											return;
+										}
+
+										navigate("/" + window.location.search);
+									}}
 								>
 									<KeyIcon />
 									{t("Sign-in with Passkey")}

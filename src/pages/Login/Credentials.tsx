@@ -2,7 +2,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import React from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +31,7 @@ const DefaultForm = {
 
 function CredentialsForm() {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = React.useState(false);
 	const { control, register, handleSubmit, formState } = useForm<
 		typeof DefaultForm
@@ -39,21 +40,11 @@ function CredentialsForm() {
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
 		const Response = await authClient.signIn.email({
 			...data,
-			callbackURL: import.meta.env.BASE_URL + "account",
-			fetchOptions: {
-				onSuccess(ctx) {
-					if (ctx.response.redirected) {
-						window.location.href = ctx.response.url;
-						return;
-					}
-				},
-				headers: {
-					accept: "application/json",
-				},
-			},
 		});
 
 		if (Response.error) toast.error(Response.error.message);
+
+		navigate("/" + window.location.search);
 	};
 
 	return (
