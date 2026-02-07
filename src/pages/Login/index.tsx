@@ -87,7 +87,11 @@ function Login() {
 											onClick={async () => {
 												const Response = await authClient.signIn.social({
 													provider: key,
-													callbackURL: window.location.href,
+													callbackURL:
+														new URL(
+															import.meta.env.BASE_URL,
+															window.location.origin,
+														).toString() + window.location.search,
 												});
 
 												if (!Response.error) navigate("/");
