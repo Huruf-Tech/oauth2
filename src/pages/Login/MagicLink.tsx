@@ -31,7 +31,7 @@ function MagicLinkForm() {
 			email: data.email,
 			callbackURL:
 				new URL(import.meta.env.BASE_URL, window.location.origin).toString() +
-				`${window.location.search}`,
+				window.location.search,
 		});
 
 		if (Response.error) toast.error(Response.error.message);
