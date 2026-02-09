@@ -14,6 +14,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
+	TabBullets,
 	TabButton,
 	TabContent,
 	TabPanel,
@@ -193,6 +194,8 @@ function Home() {
 					<TabContent value={"integrations"}>Integrations</TabContent>
 					<TabContent value={"collaborators"}>Collaborators</TabContent>
 				</TabPanel>
+
+				<TabBullets />
 			</Tabs>
 		</div>
 	);

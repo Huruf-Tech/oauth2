@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import HurufLogo from "@/assets/huruf-logo.png";
 import { useCapabilities } from "@/hooks/useCapabilities";
-import { useOauthApp } from "@/hooks/useOauthApp";
+import { useAppBranding } from "@/hooks/useAppBranding";
 import FormSkeleton from "./LoadingSkeleton";
 import PoweredBy from "./PoweredBy";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -19,7 +19,7 @@ function FormWrapper({
 	consentLogo?: React.ReactNode;
 }) {
 	const { t } = useTranslation();
-	const { isLoading, app, error } = useOauthApp();
+	const { isLoading, app, error } = useAppBranding();
 	const { isLoading: capLoading } = useCapabilities();
 
 	const appName = app?.name ?? "Huruf Tech";

@@ -2,7 +2,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import React from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,29 +31,24 @@ const DefaultForm = {
 
 function CredentialsForm() {
 	const { t } = useTranslation();
+	const location = useLocation();
+	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams(location.search);
 	const [showPassword, setShowPassword] = React.useState(false);
 	const { control, register, handleSubmit, formState } = useForm<
 		typeof DefaultForm
-	>({ defaultValues: DefaultForm });
+	>({
+		defaultValues: { ...DefaultForm, email: searchParams.get("email") ?? "" },
+	});
 
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
 		const Response = await authClient.signIn.email({
 			...data,
-			callbackURL: import.meta.env.BASE_URL + "account",
-			fetchOptions: {
-				onSuccess(ctx) {
-					if (ctx.response.redirected) {
-						window.location.href = ctx.response.url;
-						return;
-					}
-				},
-				headers: {
-					accept: "application/json",
-				},
-			},
 		});
 
 		if (Response.error) toast.error(Response.error.message);
+
+		navigate("/" + window.location.search);
 	};
 
 	return (
@@ -61,15 +56,30 @@ function CredentialsForm() {
 			<FieldGroup>
 				<Field>
 					<FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
-					<Input
-						id="email"
-						type="email"
-						autoComplete="email webauthn"
-						placeholder="m@example.com"
-						{...register("email", {
+					<Controller
+						name="email"
+						control={control}
+						rules={{
 							validate: (value) =>
 								isValidEmail(value) ? true : t("Please provide a valid email!"),
-						})}
+						}}
+						render={({ field }) => (
+							<Input
+								id="email"
+								type="email"
+								placeholder="m@example.com"
+								autoComplete="email webauthn"
+								value={field.value}
+								onChange={(e) => {
+									const value = e.target.value;
+									// set email to url as well
+									searchParams.set("email", value);
+									setSearchParams(searchParams, { replace: true });
+									// update the form value
+									field.onChange(value);
+								}}
+							/>
+						)}
 					/>
 
 					<FieldError>{formState.errors.email?.message}</FieldError>

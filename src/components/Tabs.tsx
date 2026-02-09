@@ -116,18 +116,8 @@ function Tabs({
 		[defaultValue, onValueChange, scrollToValue],
 	);
 
-	return <TabsContext.Provider value={value}>{children}</TabsContext.Provider>;
-}
-
-function TabsList({
-	className,
-	children,
-	...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-	const { listRef } = useTabs();
-
 	return (
-		<React.Fragment>
+		<TabsContext.Provider value={value}>
 			<style>{`
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
@@ -138,20 +128,32 @@ function TabsList({
             scrollbar-width: none;
         }
         `}</style>
-			<div className="p-2">
-				<div
-					ref={listRef}
-					className={cn(
-						"relative flex p-2 gap-2 snap-x snap-mandatory overflow-x-auto hide-scrollbar",
-						className,
-					)}
-					role="tablist"
-					{...props}
-				>
-					{children}
-				</div>
+			{children}
+		</TabsContext.Provider>
+	);
+}
+
+function TabsList({
+	className,
+	children,
+	...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+	const { listRef } = useTabs();
+
+	return (
+		<div className="p-2">
+			<div
+				ref={listRef}
+				className={cn(
+					"relative flex p-2 gap-2 snap-x snap-mandatory overflow-x-auto hide-scrollbar",
+					className,
+				)}
+				role="tablist"
+				{...props}
+			>
+				{children}
 			</div>
-		</React.Fragment>
+		</div>
 	);
 }
 
@@ -192,7 +194,10 @@ function TabPanel({
 	return (
 		<div
 			ref={panelRef}
-			className={cn("flex snap-x snap-mandatory overflow-x-auto", className)}
+			className={cn(
+				"flex snap-x snap-mandatory overflow-x-auto hide-scrollbar",
+				className,
+			)}
 			data-slot="tabs-content"
 			{...props}
 		/>
@@ -219,4 +224,37 @@ function TabContent({
 	);
 }
 
-export { Tabs, TabsList, TabButton, TabPanel, TabContent };
+function TabBullets() {
+	const { defaultValue, listRef } = useTabs();
+
+	const [snapList, setSnapList] = React.useState<HTMLCollection>();
+
+	React.useEffect(() => {
+		if (!listRef.current) return;
+
+		setSnapList(listRef.current.children);
+	}, [listRef]);
+
+	return (
+		(snapList?.length ?? 0) > 0 && (
+			<div className="fixed bottom-10 left-0 right-0 max-w-fit rounded-full bg-background/50 backdrop-blur-sm p-2 flex items-center justify-center gap-1 mx-auto">
+				{Array.from(snapList!, (el, i) => {
+					const dataValue = el.getAttribute("data-value");
+					return (
+						<span
+							key={i}
+							className={cn(
+								"w-2 h-2 rounded-full",
+								defaultValue === dataValue
+									? "bg-primary"
+									: "bg-muted-foreground/50",
+							)}
+						/>
+					);
+				})}
+			</div>
+		)
+	);
+}
+
+export { Tabs, TabsList, TabButton, TabPanel, TabContent, TabBullets };

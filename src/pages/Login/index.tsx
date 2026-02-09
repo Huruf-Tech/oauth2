@@ -19,20 +19,20 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { useCapabilities } from "@/hooks/useCapabilities";
-import { useOauthApp } from "@/hooks/useOauthApp";
 import { authClient } from "@/lib/auth";
 import { authProviders } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 import { toast } from "sonner";
+import { useAppBranding } from "@/hooks/useAppBranding";
 
 type ProviderKey = keyof typeof authProviders;
 
 function Login() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { error } = useOauthApp();
+	const { error } = useAppBranding();
 
 	const { capabilities } = useCapabilities();
 
@@ -87,14 +87,10 @@ function Login() {
 											onClick={async () => {
 												const Response = await authClient.signIn.social({
 													provider: key,
-													callbackURL:
-														new URL(
-															import.meta.env.BASE_URL,
-															window.location.origin,
-														).toString() + window.location.search,
 												});
 
-												if (!Response.error) navigate("/");
+												if (!Response.error)
+													navigate("/" + window.location.search);
 											}}
 										>
 											<img

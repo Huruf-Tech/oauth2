@@ -15,8 +15,6 @@ function Account() {
 
 			return;
 		}
-
-		return <Navigate to={"/account" + window.location.search} />;
 	}
 
 	if (!data && !isPending)

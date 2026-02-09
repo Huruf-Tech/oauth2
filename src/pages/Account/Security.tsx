@@ -2,7 +2,7 @@ import Item from "@/components/Item";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOauthApp } from "@/hooks/useOauthApp";
+import { useAppBranding } from "@/hooks/useAppBranding";
 import { authClient } from "@/lib/auth";
 import {
 	AsteriskSquareIcon,
@@ -18,7 +18,7 @@ import useSWR from "swr";
 function Security() {
 	const { t } = useTranslation();
 
-	const { app } = useOauthApp();
+	const { app } = useAppBranding();
 
 	const { data, isLoading, mutate } = useSWR("oauthPasskeyList", () =>
 		authClient.passkey.listUserPasskeys(),

@@ -1,7 +1,7 @@
 export const apiOrigin =
 	import.meta.env.VITE_API_ORIGIN ?? window.location.origin;
 
-export type TOauthApp = {
+export type TAppBranding = {
 	name: string;
 	description?: string;
 	logo?: string;
@@ -9,16 +9,16 @@ export type TOauthApp = {
 	theme?: Record<string, string>;
 };
 
-export const getOauthApp = async (appId?: string): Promise<TOauthApp> => {
-	const url = new URL(`/oauthApps/api/${appId || ""}`, apiOrigin);
+export const getAppBranding = async (): Promise<TAppBranding> => {
+	const url = new URL(`/auth/branding/`, apiOrigin);
 
 	const res = await fetch(url, {
 		method: "get",
 	});
 
-	const data = (await res.json()) as { apps: Array<TOauthApp> };
+	const data = (await res.json()) as TAppBranding;
 
-	return data.apps[0];
+	return data;
 };
 
 export const getAuthCapabilities = async (): Promise<string[]> => {
