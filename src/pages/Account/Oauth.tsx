@@ -1,7 +1,7 @@
 import Item from "@/components/Item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth";
+import { oauth2Client } from "@/lib/auth";
 import { getInitials } from "@/lib/utils";
 import {
 	FlagIcon,
@@ -16,7 +16,7 @@ function OAuth() {
 	const { t } = useTranslation();
 
 	const { data } = useSWR("oauth2Clients", () =>
-		authClient.oauth2.getClients(),
+		oauth2Client.oauth2.getClients(),
 	);
 
 	return (
@@ -32,7 +32,7 @@ function OAuth() {
 				<Button
 					variant={"secondary"}
 					onClick={async () => {
-						const { data, error } = await authClient.oauth2.createClient({
+						const { data, error } = await oauth2Client.oauth2.createClient({
 							client_name: "test client",
 							redirect_uris: ["https://google.com"],
 							token_endpoint_auth_method: "none",

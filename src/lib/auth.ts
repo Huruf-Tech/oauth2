@@ -3,13 +3,23 @@ import { adminClient, magicLinkClient } from "better-auth/client/plugins";
 import { oauthProviderClient } from "@better-auth/oauth-provider/client";
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient({
+const baseClientOpts = {
 	baseURL: import.meta.env.VITE_API_ORIGIN ?? window.location.origin,
 	basePath: "/auth/api",
+};
+
+export const authClient = createAuthClient({
+	...baseClientOpts,
 	plugins: [
 		passkeyClient(),
 		magicLinkClient(),
 		adminClient(),
+	],
+});
+
+export const oauth2Client = createAuthClient({
+	...baseClientOpts,
+	plugins: [
 		oauthProviderClient(),
 	],
 });

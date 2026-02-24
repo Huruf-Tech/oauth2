@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import Item from "@/components/Item";
 import { Badge } from "@/components/ui/badge";
 import OAuth2 from "@/components/custom-icons/oauth2";
-import OAuth from "./Oauth";
+// import OAuth from "./Oauth";
 import Security from "./Security";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
@@ -188,9 +188,9 @@ function Home() {
 						<Security />
 					</TabContent>
 					<TabContent value={"changePassword"}>Change Password</TabContent>
-					<TabContent value={"oauth2"}>
+					{/* <TabContent value={"oauth2"}>
 						<OAuth />
-					</TabContent>
+					</TabContent> */}
 					<TabContent value={"integrations"}>Integrations</TabContent>
 					<TabContent value={"collaborators"}>Collaborators</TabContent>
 				</TabPanel>

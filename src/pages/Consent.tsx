@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldDescription } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth";
+import { oauth2Client } from "@/lib/auth";
 import { cn, getInitials } from "@/lib/utils";
 import { EllipsisIcon } from "lucide-react";
 import React from "react";
@@ -25,7 +25,7 @@ function Consent() {
 	const [searchParams] = useSearchParams();
 
 	const { data, error, isLoading } = useSWR("oauth2Client", () =>
-		authClient.oauth2.publicClient({
+		oauth2Client.oauth2.publicClient({
 			query: { client_id: searchParams.get("client_id") ?? "" },
 		}),
 	);
@@ -36,7 +36,7 @@ function Consent() {
 	);
 
 	async function consentAction(action: boolean) {
-		const { data, error } = await authClient.oauth2.consent({ accept: action });
+		const { data, error } = await oauth2Client.oauth2.consent({ accept: action });
 
 		if (error) {
 			toast.error(error.message);
