@@ -60,24 +60,25 @@ function OAuth() {
 									</AvatarFallback>
 								</Avatar>
 
-								<span className="absolute -bottom-1 -right-1 flex items-center justify-center size-7 rounded-full p-1 bg-background">
+								<span className="absolute -bottom-1 -right-1 flex items-center justify-center size-7 rounded-full p-1 bg-muted border-2 border-background">
 									{v.type === "native" ? (
-										<SmartphoneIcon />
+										<SmartphoneIcon className="size-4" />
 									) : v.type === "web" ? (
-										<GlobeIcon />
+										<GlobeIcon className="size-4" />
 									) : (
-										<MonitorSmartphoneIcon />
+										<MonitorSmartphoneIcon className="size-4" />
 									)}
 								</span>
 							</div>
 						),
 						label: v.client_name ?? "N/A",
 						value: `*******${v.client_id?.slice(-10)}`,
-						right: () => (
-							<div className="flex items-center gap-3">
-								<FlagIcon className="size-4 fill-muted-foreground stroke-muted-foreground" />
-							</div>
-						),
+						right: () =>
+							v.public ? (
+								<div className="flex items-center gap-3">
+									<FlagIcon className="size-4" />
+								</div>
+							) : null,
 					}))
 					.map((item, index) => (
 						<Item key={index}>

@@ -1,5 +1,9 @@
 import { passkeyClient } from "@better-auth/passkey/client";
-import { adminClient, magicLinkClient } from "better-auth/client/plugins";
+import {
+	adminClient,
+	magicLinkClient,
+	twoFactorClient,
+} from "better-auth/client/plugins";
 import { oauthProviderClient } from "@better-auth/oauth-provider/client";
 import { createAuthClient } from "better-auth/react";
 
@@ -12,6 +16,7 @@ export const authClient = createAuthClient({
 	...baseClientOpts,
 	plugins: [
 		passkeyClient(),
+		twoFactorClient(),
 		magicLinkClient(),
 		adminClient(),
 	],
@@ -19,7 +24,5 @@ export const authClient = createAuthClient({
 
 export const oauth2Client = createAuthClient({
 	...baseClientOpts,
-	plugins: [
-		oauthProviderClient(),
-	],
+	plugins: [oauthProviderClient()],
 });

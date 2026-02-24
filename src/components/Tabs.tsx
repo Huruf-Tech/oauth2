@@ -167,14 +167,12 @@ function TabButton({
 	return (
 		<Button
 			size="lg"
-			variant={"ghost"}
+			variant={defaultValue === value ? "default" : "ghost"}
 			className={cn(
 				"snap-start flex shrink-0 grow cursor-pointer items-center justify-center whitespace-nowrap transition-[color,background-color,box-shadow]",
-				"hover:text-muted-foreground aria-selected:bg-primary aria-selected:ring-primary aria-selected:focus-visible:border-background aria-selected:text-white",
 				className,
 			)}
 			data-value={value}
-			aria-selected={defaultValue === value}
 			data-slot="tabs-trigger"
 			onClick={(el) => {
 				scrollToValue(value, el.currentTarget);
@@ -237,7 +235,7 @@ function TabBullets() {
 
 	return (
 		(snapList?.length ?? 0) > 0 && (
-			<div className="fixed bottom-10 left-0 right-0 max-w-fit rounded-full bg-background/50 backdrop-blur-sm p-2 flex items-center justify-center gap-1 mx-auto">
+			<div className="fixed bottom-5 left-0 right-0 max-w-fit rounded-full bg-background/50 backdrop-blur-sm p-2 flex items-center justify-center gap-1 mx-auto">
 				{Array.from(snapList!, (el, i) => {
 					const dataValue = el.getAttribute("data-value");
 					return (

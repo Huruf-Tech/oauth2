@@ -42,9 +42,18 @@ function CredentialsForm() {
 	});
 
 	const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-		const Response = await authClient.signIn.email({
-			...data
-		});
+		const Response = await authClient.signIn.email(
+			{
+				...data,
+			},
+			{
+				async onSuccess(context) {
+					if (context.data.twoFactorRedirect) {
+						// Handle the 2FA verification in place
+					}
+				},
+			},
+		);
 
 		if (Response.error) toast.error(Response.error.message);
 

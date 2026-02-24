@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppBranding } from "@/hooks/useAppBranding";
 import { authClient } from "@/lib/auth";
+import { ActionSheetRef } from "@/registry/ActionSheet";
 import {
 	AsteriskSquareIcon,
 	BrickWallShieldIcon,
@@ -12,12 +13,13 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import useSWR from "swr";
 
 function Security() {
 	const { t } = useTranslation();
-
+	const navigate = useNavigate();
 	const { app } = useAppBranding();
 
 	const { data, isLoading, mutate } = useSWR("oauthPasskeyList", () =>
@@ -95,9 +97,27 @@ function Security() {
 				content: t("Last changed {{date}}", {
 					date: "Sept 13, 2023",
 				}),
+				onClick: async () => {
+					//   if (passkeyCount > 0) {
+					//     const { data, error } =
+					//       await authClient.passkey.generateAuthenticateOptions();
+
+					//     if (error) {
+					//       toast.success(error.message);
+					//       return;
+					//     }
+
+					//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+					//     navigator.credentials.get({ publicKey: data as any });
+					//   }
+
+					//   navigate("/change-password");
+
+					ActionSheetRef.current?.trigger("verification", true);
+				},
 			},
 		],
-		[t, isLoading, app, mutate, passkeyCount],
+		[t, isLoading, app, mutate, passkeyCount, navigate],
 	);
 
 	return (
@@ -112,7 +132,11 @@ function Security() {
 			{/* list */}
 			<div className="flex flex-col gap-1 grow w-full">
 				{SecurityMethods.map((item, index) => (
-					<Item key={index}>
+					<Item
+						key={index}
+						onClick={item.onClick}
+						className={item.onClick ? "cursor-pointer" : ""}
+					>
 						<div className="flex items-center gap-3">
 							<item.icon />
 							<div className="flex flex-col">

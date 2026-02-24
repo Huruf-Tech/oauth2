@@ -33,11 +33,13 @@
 				"useSemanticElements": "off",
 				"noSvgWithoutTitle": "off",
 				"useValidAnchor": "off",
-				"noLabelWithoutControl": "off"
+				"noLabelWithoutControl": "off",
+				"useAriaPropsForRole": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off",
-				"useImportType": "off"
+				"useImportType": "off",
+				"useTemplate": "off"
 			},
 			"complexity": {
 				"noImportantStyles": "off"

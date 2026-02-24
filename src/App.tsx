@@ -1,12 +1,14 @@
 import React from "react";
 import { Outlet, useSearchParams } from "react-router";
 import { Toaster } from "sonner";
+import { ActionSheet } from "./components/ActionSheet";
+import { DirectionProvider } from "./components/ui/direction";
+import { useAppBranding } from "./hooks/useAppBranding";
 import { type TScheme, useColorScheme } from "./hooks/useColorScheme";
 import { useFavicon } from "./hooks/useFavicon";
 import { useLanguage } from "./hooks/useLanguage";
-import { useAppBranding } from "./hooks/useAppBranding";
 import { applyThemeVars } from "./lib/utils";
-import { DirectionProvider } from "./components/ui/direction";
+import { ActionSheetRef } from "./registry/ActionSheet";
 
 function App() {
 	const [searchParams] = useSearchParams();
@@ -25,6 +27,8 @@ function App() {
 			<div className="flex w-full h-full min-h-svh flex-col items-center justify-center gap-5 bg-linear-to-t from-primary/10 to-transparent to-40%">
 				<Outlet />
 			</div>
+
+			<ActionSheet ref={ActionSheetRef} />
 
 			<Toaster
 				theme={scheme}

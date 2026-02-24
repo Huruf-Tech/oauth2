@@ -7,7 +7,6 @@ import {
 	Mail,
 	Shield,
 	ShieldCheck,
-	SquareAsteriskIcon,
 	Users2,
 	XCircle,
 } from "lucide-react";
@@ -28,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import Item from "@/components/Item";
 import { Badge } from "@/components/ui/badge";
 import OAuth2 from "@/components/custom-icons/oauth2";
-// import OAuth from "./Oauth";
+import OAuth from "./Oauth";
 import Security from "./Security";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
@@ -37,11 +36,6 @@ const tabs = [
 	{ id: "home", icon: HomeIcon, label: "Home" },
 	{ id: "personal", icon: Contact2, label: "Personal info" },
 	{ id: "security", icon: Shield, label: "Security & Sign-in" },
-	{
-		id: "changePassword",
-		icon: SquareAsteriskIcon,
-		label: "Change password",
-	},
 	{
 		id: "oauth2",
 		icon: OAuth2,
@@ -188,9 +182,9 @@ function Home() {
 						<Security />
 					</TabContent>
 					<TabContent value={"changePassword"}>Change Password</TabContent>
-					{/* <TabContent value={"oauth2"}>
+					<TabContent value={"oauth2"}>
 						<OAuth />
-					</TabContent> */}
+					</TabContent>
 					<TabContent value={"integrations"}>Integrations</TabContent>
 					<TabContent value={"collaborators"}>Collaborators</TabContent>
 				</TabPanel>
