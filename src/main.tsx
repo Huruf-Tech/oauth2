@@ -9,10 +9,11 @@ import Account from "./pages/Account";
 import Home from "./pages/Account/Home";
 import Profile from "./pages/Account/Profile";
 import ChangePassword from "./pages/ChangePassword";
-import ForgotPassword from "./pages/ForgotPassword";
+import ForgotPassword from "./pages/Login/ForgotPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Consent from "./pages/Consent";
+import Consent from "./pages/Login/Consent";
+import SelectOrganization from "./pages/Login/SelectOrganization";
 
 const router = createBrowserRouter(
 	[
@@ -37,6 +38,10 @@ const router = createBrowserRouter(
 							element: <Profile />,
 						},
 					],
+				},
+				{
+					path: "/select-organization",
+					element: <SelectOrganization />,
 				},
 				{
 					path: "/consent",

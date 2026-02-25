@@ -36,7 +36,9 @@ function Consent() {
 	);
 
 	async function consentAction(action: boolean) {
-		const { data, error } = await oauth2Client.oauth2.consent({ accept: action });
+		const { data, error } = await oauth2Client.oauth2.consent({
+			accept: action,
+		});
 
 		if (error) {
 			toast.error(error.message);

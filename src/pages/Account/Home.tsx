@@ -181,7 +181,6 @@ function Home() {
 					<TabContent value={"security"}>
 						<Security />
 					</TabContent>
-					<TabContent value={"changePassword"}>Change Password</TabContent>
 					<TabContent value={"oauth2"}>
 						<OAuth />
 					</TabContent>

@@ -5,7 +5,9 @@ function Account() {
 	const { data, isPending } = authClient.useSession();
 
 	if (data && !isPending) {
-		if (new URLSearchParams(window.location.search).has("client_id")) {
+		if (!data.session.activeOrganizationId) {
+			return <Navigate to={"/select-organization" + window.location.search} />;
+		} else if (new URLSearchParams(window.location.search).has("client_id")) {
 			// eslint-disable-next-line react-hooks/immutability
 			window.location.href =
 				new URL(
