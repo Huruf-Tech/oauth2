@@ -36,7 +36,7 @@ function App() {
 				toastOptions={{
 					className: "!items-start !gap-3 !rounded-2xl !p-3",
 					classNames: {
-						icon: "[&>svg]:!size-6 [&>svg]:mt-3",
+						icon: "[&>svg]:!size-6 [&>svg]:mt-2",
 						title: "!text-base",
 						description: "!text-sm !text-muted-foreground",
 						actionButton: "!p-4 !h-6 !rounded-full capitalize",

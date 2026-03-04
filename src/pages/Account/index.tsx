@@ -6,7 +6,7 @@ function Account() {
 
 	if (data && !isPending) {
 		if (!data.session.activeOrganizationId) {
-			return <Navigate to={"/select-organization" + window.location.search} />;
+			// return <Navigate to={"/select-organization" + window.location.search} />;
 		} else if (new URLSearchParams(window.location.search).has("client_id")) {
 			// eslint-disable-next-line react-hooks/immutability
 			window.location.href =

@@ -24,3 +24,18 @@ export function getInitials(name?: string) {
 		? first.substring(0, 2).toUpperCase()
 		: `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
 }
+
+export function generateSecret(length: number = 32): string {
+	const charset =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	const values = new Uint8Array(length);
+	crypto.getRandomValues(values);
+
+	let secret = "";
+	for (let i = 0; i < length; i++) {
+		secret += charset[values[i] % charset.length];
+	}
+
+	return secret;
+}

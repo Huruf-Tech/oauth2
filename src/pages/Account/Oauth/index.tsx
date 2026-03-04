@@ -1,6 +1,5 @@
 // import Item from "@/components/Item";
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 // import { oauth2Client } from "@/lib/auth";
 // import { getInitials } from "@/lib/utils";
 // import {
@@ -12,15 +11,14 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { ThunderSDK } from "thunder-sdk";
+import CreateClient from "./CreateClient";
 
 function OAuth() {
 	const { t } = useTranslation();
 
 	const { data } = useSWR(
 		"oauth2Clients",
-		async () =>
-			// oauth2Client.oauth2.getClients(),
-			await ThunderSDK.oauthClients.get({ params: {} }),
+		async () => await ThunderSDK.oauthClients.get({ params: {} }),
 	);
 
 	console.log(data?.results);
@@ -35,23 +33,7 @@ function OAuth() {
 					</p>
 				</div>
 
-				<Button
-					variant={"secondary"}
-					onClick={async () => {
-						const Response = await ThunderSDK.oauthClients.create({
-							body: {
-								name: "test client",
-								redirectUris: ["https://google.com"],
-								type: "public",
-								allowedScopes: ["offline_access"],
-							},
-						});
-
-						console.log(Response);
-					}}
-				>
-					{t("Create client")}
-				</Button>
+				<CreateClient />
 			</div>
 
 			<div className="flex flex-col gap-1 w-full">
