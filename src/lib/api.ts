@@ -16,13 +16,13 @@ export const getAppBranding = async (): Promise<TAppBranding> => {
     method: "get",
   });
 
-  const data = await res.json();
-
   if (!res.ok) {
     throw new Error(
-      data?.error?.message || `Request failed with status ${res.status}`,
+      (await res.text()) || `Request failed with status ${res.status}`,
     );
   }
+
+  const data = await res.json();
 
   return data as TAppBranding;
 };
@@ -34,13 +34,13 @@ export const getAuthCapabilities = async (): Promise<string[]> => {
     method: "get",
   });
 
-  const data = await res.json();
-
   if (!res.ok) {
     throw new Error(
-      data?.error?.message || `Request failed with status ${res.status}`,
+      (await res.text()) || `Request failed with status ${res.status}`,
     );
   }
+
+  const data = await res.json();
 
   return (data as { capabilities: string[] }).capabilities;
 };
