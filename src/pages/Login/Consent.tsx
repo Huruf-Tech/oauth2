@@ -31,7 +31,7 @@ function Consent() {
     async () =>
       await ThunderSDK.oauthClients.get({
         params: { id: searchParams.get("client_id") ?? "" },
-        query: {}
+        query: {},
       }),
   );
 
