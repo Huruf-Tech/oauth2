@@ -7,7 +7,6 @@ import "../i18n";
 import App from "./App";
 import Account from "./pages/Account";
 import Home from "./pages/Account/Home";
-import Profile from "./pages/Account/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import ResetPassword from "./pages/Login/ResetPassword";
 import Login from "./pages/Login";
@@ -49,10 +48,6 @@ const router = createBrowserRouter(
             {
               index: true,
               element: <Home />,
-            },
-            {
-              path: "/account/profile",
-              element: <Profile />,
             },
           ],
         },

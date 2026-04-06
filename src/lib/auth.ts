@@ -4,6 +4,7 @@ import {
   magicLinkClient,
   twoFactorClient,
   organizationClient,
+  inferAdditionalFields,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
@@ -26,5 +27,17 @@ export const authClient = createAuthClient({
     magicLinkClient(),
     adminClient(),
     organizationClient(),
+    inferAdditionalFields({
+      user: {
+        gender: {
+          type: "string",
+          required: false,
+        },
+        dob: {
+          type: "date",
+          required: false,
+        },
+      },
+    }),
   ],
 });

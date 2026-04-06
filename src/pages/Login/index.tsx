@@ -27,7 +27,7 @@ import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 import { toast } from "sonner";
 import { useAppBranding } from "@/hooks/useAppBranding";
-import VerifyTwoFactor from "../Account/Security/VerifyTwoFactor";
+import VerifyTwoFactor from "../Account/Security/2FA/VerifyTwoFactor";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 
@@ -95,6 +95,7 @@ function Login() {
                         onClick={async () => {
                           const Response = await authClient.signIn.social({
                             provider: key,
+                            callbackURL: window.location.origin,
                           });
 
                           if (!Response.error)

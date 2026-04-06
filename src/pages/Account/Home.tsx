@@ -1,4 +1,5 @@
 import {
+  ArrowUpFromLine,
   BlocksIcon,
   CheckCircle2,
   Contact2,
@@ -21,7 +22,7 @@ import {
 } from "@/components/Tabs";
 import { authClient } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { getInitials, sha256 } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Item from "@/components/Item";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,9 @@ import Security from "./Security";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
 import { useLoading } from "@/contexts/Loading";
+import { GravatarQuickEditorCore } from "@gravatar-com/quick-editor";
+import React from "react";
+import UpdateProfile from "./UpdateProfile";
 
 const tabs = [
   { id: "home", icon: HomeIcon, label: "Home" },
@@ -52,10 +56,35 @@ function Home() {
 
   const { setLoading } = useLoading();
 
-  const { data } = authClient.useSession();
+  const { data, refetch } = authClient.useSession();
 
   const fullName = data?.user?.name || "Unamed";
   const verified = data?.user?.emailVerified;
+
+  const gravatarCore = React.useMemo(() => {
+    const email = data?.user.email ?? "unknown";
+
+    return new GravatarQuickEditorCore({
+      email,
+      scope: ["avatars"],
+      onProfileUpdated: async (type) => {
+        if (type === "avatar_updated") {
+          const { error } = await authClient.updateUser({
+            image: `https://www.gravatar.com/avatar/${await sha256(
+              email,
+            )}?s=200&d=identicon`,
+          });
+
+          if (error) {
+            toast.error(error.message);
+            return;
+          }
+
+          refetch();
+        }
+      },
+    });
+  }, [data?.user.email, refetch]);
 
   return (
     <div className="w-full h-full bg-muted-foreground/5 dark:bg-muted/30">
@@ -115,7 +144,7 @@ function Home() {
                   </p>
                 </div>
 
-                <Button variant={"secondary"}>{t("Edit")}</Button>
+                <UpdateProfile />
               </div>
 
               {/* list */}
@@ -125,12 +154,22 @@ function Home() {
                     icon: ImageIcon,
                     label: "Profile picture",
                     content: (
-                      <Avatar className="size-14 border">
-                        <AvatarImage src={data?.user?.image ?? undefined} />
-                        <AvatarFallback className="text-xl">
-                          {getInitials(fullName)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="size-14 border">
+                          <AvatarImage src={data?.user?.image ?? undefined} />
+                          <AvatarFallback className="text-xl">
+                            {getInitials(fullName)}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <Button
+                          size="icon-xs"
+                          className="absolute right-0 bottom-0"
+                          onClick={() => gravatarCore.open()}
+                        >
+                          <ArrowUpFromLine />
+                        </Button>
+                      </div>
                     ),
                   },
                   {
