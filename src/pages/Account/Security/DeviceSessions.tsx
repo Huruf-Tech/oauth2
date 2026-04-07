@@ -29,7 +29,7 @@ export function DeviceSessions() {
 
     const sessions = data?.data ?? [];
 
-    console.info({ data, loadingSessions, isValidating, capabilities });
+    console.log({ data, loadingSessions, isValidating, capabilities });
 
     if (!capabilities?.includes("multiSession")) return null;
 
@@ -60,7 +60,7 @@ export function DeviceSessions() {
                     )
                     : (
                         sessions.map(({ session }, idx) => {
-                            console.info(
+                            console.log(
                                 parseUserAgent(session.userAgent!),
                                 "user agent",
                             );
