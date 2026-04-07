@@ -58,10 +58,9 @@ function Home() {
 
   const fullName = data?.user?.name || "Unamed";
   const verified = data?.user?.emailVerified;
+  const email = data?.user.email ?? "unknown";
 
   const gravatarCore = React.useMemo(() => {
-    const email = data?.user.email ?? "unknown";
-
     return new GravatarQuickEditorCore({
       email,
       scope: ["avatars"],
@@ -82,15 +81,14 @@ function Home() {
         }
       },
     });
-  }, [data?.user.email, refetch]);
+  }, [email, refetch]);
 
   return (
     <div className="w-full h-full bg-muted-foreground/5 dark:bg-muted/30">
       <Tabs
         defaultValue={location.hash.replaceAll("#", "") || "home"}
         onValueChange={(tab) =>
-          navigate(location.pathname + `/#${tab}`, { replace: true })
-        }
+          navigate(location.pathname + `/#${tab}`, { replace: true })}
       >
         <TabsList className="w-full max-w-fit mx-auto">
           {tabs.map((tab) => (
@@ -151,7 +149,7 @@ function Home() {
                   {
                     icon: ImageIcon,
                     label: "Profile picture",
-                    content: (
+                    right: () => (
                       <div className="relative">
                         <Avatar className="size-14 border">
                           <AvatarImage src={data?.user?.image ?? undefined} />
@@ -183,19 +181,35 @@ function Home() {
                   {
                     icon: ShieldCheck,
                     label: "Email verified",
-                    orientation: "vertical",
                     content: (
                       <Badge
                         variant={verified ? "success" : "destructive"}
                         className="max-w-fit"
                       >
-                        {verified ? (
-                          <CheckCircle2 className="fill-success stroke-background" />
-                        ) : (
-                          <XCircle className="fill-destructive stroke-background" />
-                        )}
+                        {verified
+                          ? (
+                            <CheckCircle2 className="fill-success stroke-background" />
+                          )
+                          : (
+                            <XCircle className="fill-destructive stroke-background" />
+                          )}
                         {t(verified ? "Verified" : "Unverified")}
                       </Badge>
+                    ),
+                    right: () => (
+                      !verified && (
+                        <Button
+                          onClick={async () => {
+                            setLoading(true);
+                            await authClient.sendVerificationEmail({
+                              email,
+                              callbackURL: window.location.origin,
+                            }).finally(() => setLoading(false));
+                          }}
+                        >
+                          {t("Verify")}
+                        </Button>
+                      )
                     ),
                   },
                 ].map((item, index) => (
@@ -204,19 +218,17 @@ function Home() {
                       <item.icon />
                       <div className="flex flex-col">
                         <h3 className="font-medium">{t(item.label)}</h3>
-                        {typeof item.content === "string" ? (
-                          <p className="text-sm text-muted-foreground">
-                            {item.content}
-                          </p>
-                        ) : item?.orientation === "vertical" ? (
-                          item.content
-                        ) : null}
+                        {typeof item.content === "string"
+                          ? (
+                            <p className="text-sm text-muted-foreground">
+                              {item.content}
+                            </p>
+                          )
+                          : item?.content}
                       </div>
                     </div>
 
-                    {typeof item.content !== "string" &&
-                      item?.orientation !== "vertical" &&
-                      item.content}
+                    {item.right?.()}
                   </Item>
                 ))}
               </div>
