@@ -152,7 +152,7 @@ function Home() {
                   {
                     icon: ImageIcon,
                     label: "Profile picture",
-                    content: (
+                    right: () => (
                       <div className="relative">
                         <Avatar className="size-14 border">
                           <AvatarImage src={data?.user?.image ?? undefined} />
@@ -184,7 +184,6 @@ function Home() {
                   {
                     icon: ShieldCheck,
                     label: "Email verified",
-                    orientation: "vertical",
                     content: (
                       <Badge
                         variant={verified ? "success" : "destructive"}
