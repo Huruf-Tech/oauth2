@@ -62,35 +62,38 @@ function Home() {
   const verified = data?.user?.emailVerified;
   const email = data?.user.email ?? "unknown";
 
-  const gravatarCore = React.useMemo(() => {
-    return new GravatarQuickEditorCore({
-      email,
-      scope: ["avatars"],
-      onProfileUpdated: async (type) => {
-        if (type === "avatar_updated") {
-          const { error } = await authClient.updateUser({
-            image: `https://www.gravatar.com/avatar/${await sha256(
-              email,
-            )}?s=200&d=identicon`,
-          });
+  const gravatarCore = React.useMemo(
+    () =>
+      new GravatarQuickEditorCore({
+        email,
+        scope: ["avatars"],
+        onProfileUpdated: async (type) => {
+          if (type === "avatar_updated") {
+            const { error } = await authClient.updateUser({
+              image: `https://www.gravatar.com/avatar/${await sha256(
+                email,
+              )}?s=200&d=identicon`,
+            });
 
-          if (error) {
-            toast.error(error.message);
-            return;
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+
+            refetch();
           }
-
-          refetch();
-        }
-      },
-    });
-  }, [email, refetch]);
+        },
+      }),
+    [email, refetch],
+  );
 
   return (
     <div className="w-full h-full bg-muted-foreground/5 dark:bg-muted/30">
       <Tabs
         defaultValue={location.hash.replaceAll("#", "") || "home"}
         onValueChange={(tab) =>
-          navigate(location.pathname + `/#${tab}`, { replace: true })}
+          navigate(location.pathname + `/#${tab}`, { replace: true })
+        }
       >
         <TabsList className="w-full max-w-fit mx-auto">
           {tabs.map((tab) => (
@@ -198,31 +201,30 @@ function Home() {
                         variant={verified ? "success" : "destructive"}
                         className="max-w-fit"
                       >
-                        {verified
-                          ? (
-                            <CheckCircle2 className="fill-success stroke-background" />
-                          )
-                          : (
-                            <XCircle className="fill-destructive stroke-background" />
-                          )}
+                        {verified ? (
+                          <CheckCircle2 className="fill-success stroke-background" />
+                        ) : (
+                          <XCircle className="fill-destructive stroke-background" />
+                        )}
                         {t(verified ? "Verified" : "Unverified")}
                       </Badge>
                     ),
-                    right: () => (
+                    right: () =>
                       !verified && (
                         <Button
                           onClick={async () => {
                             setLoading(true);
-                            await authClient.sendVerificationEmail({
-                              email,
-                              callbackURL: window.location.origin,
-                            }).finally(() => setLoading(false));
+                            await authClient
+                              .sendVerificationEmail({
+                                email,
+                                callbackURL: window.location.origin,
+                              })
+                              .finally(() => setLoading(false));
                           }}
                         >
                           {t("Verify")}
                         </Button>
-                      )
-                    ),
+                      ),
                   },
                 ].map((item, index) => (
                   <Item key={index}>
@@ -230,13 +232,13 @@ function Home() {
                       <item.icon />
                       <div className="flex flex-col">
                         <h3 className="font-medium">{t(item.label)}</h3>
-                        {typeof item.content === "string"
-                          ? (
-                            <p className="text-sm text-muted-foreground">
-                              {item.content}
-                            </p>
-                          )
-                          : item?.content}
+                        {typeof item.content === "string" ? (
+                          <p className="text-sm text-muted-foreground">
+                            {item.content}
+                          </p>
+                        ) : (
+                          item?.content
+                        )}
                       </div>
                     </div>
 
