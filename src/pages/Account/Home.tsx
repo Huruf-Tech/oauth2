@@ -1,6 +1,5 @@
 import {
   ArrowUpFromLine,
-  BlocksIcon,
   CheckCircle2,
   Contact2,
   HomeIcon,
@@ -45,7 +44,6 @@ const tabs = [
     icon: OAuth2,
     label: "OAuth2",
   },
-  { id: "integrations", icon: BlocksIcon, label: "Integrations" },
   { id: "collaborators", icon: Users2, label: "Collaborators" },
 ];
 
@@ -230,7 +228,6 @@ function Home() {
           <TabContent value={"oauth2"}>
             <OAuth />
           </TabContent>
-          <TabContent value={"integrations"}>Integrations</TabContent>
           <TabContent value={"collaborators"}>Collaborators</TabContent>
         </TabPanel>
 

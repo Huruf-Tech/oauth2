@@ -12,7 +12,6 @@ import ResetPassword from "./pages/Login/ResetPassword";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Consent from "./pages/Login/Consent";
-import SelectOrganization from "./pages/Login/SelectOrganization";
 import { ThunderSDK } from "thunder-sdk";
 import { toast } from "sonner";
 
@@ -50,10 +49,6 @@ const router = createBrowserRouter(
               element: <Home />,
             },
           ],
-        },
-        {
-          path: "/select-organization",
-          element: <SelectOrganization />,
         },
         {
           path: "/consent",

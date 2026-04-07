@@ -53,6 +53,11 @@ function CredentialsForm({ onShowTwoStep }: { onShowTwoStep: () => void }) {
             onShowTwoStep();
           } else navigate("/" + window.location.search);
         },
+        onError(ctx) {
+          if (ctx.error.status === 403) {
+            toast.error(t("Please verify your email address!"));
+          }
+        },
       },
     );
 

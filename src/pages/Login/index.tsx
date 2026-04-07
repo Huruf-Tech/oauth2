@@ -149,7 +149,11 @@ function Login() {
                       const { error } = await authClient.signIn.passkey();
 
                       if (error) {
-                        toast.error(error.message);
+                        toast.error(
+                          typeof error.message === "string"
+                            ? error.message
+                            : error.message?.message,
+                        );
                         return;
                       }
 
@@ -237,17 +241,15 @@ function TwoFactorForm() {
                   rules={{ required: t("Backup code is required!") }}
                   render={({ field, fieldState }) => (
                     <>
-                      {field.value ? (
-                        <Field>
-                          <Input
-                            placeholder={t("Enter your backup code")}
-                            value={field.value}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
+                      <Field>
+                        <Input
+                          placeholder={t("Enter your backup code")}
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
 
-                          <FieldError>{fieldState.error?.message}</FieldError>
-                        </Field>
-                      ) : null}
+                        <FieldError>{fieldState.error?.message}</FieldError>
+                      </Field>
                       <Field orientation={"horizontal"} className="max-w-fit">
                         <Button
                           onClick={async () => {

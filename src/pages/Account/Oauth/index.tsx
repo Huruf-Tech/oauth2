@@ -14,6 +14,14 @@ import { SkeletonRepeater } from "@/components/SkeletonRepeater";
 import { Skeleton } from "@/components/ui/skeleton";
 import VirtualList from "@/components/VirutalList";
 import { useLoading } from "@/contexts/Loading";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import OAuth2 from "@/components/custom-icons/oauth2";
 
 function OAuth() {
   const { t } = useTranslation();
@@ -30,6 +38,7 @@ function OAuth() {
     async () =>
       await ThunderSDK.oauthClients.get({
         params: {},
+        query: {},
       }),
   );
 
@@ -48,10 +57,23 @@ function OAuth() {
         <CreateClient onSuccess={mutate} />
       </div>
 
-      {loadingClients || isValidating || authClients.length === 0 ? (
+      {loadingClients || isValidating ? (
         <SkeletonRepeater count={3} className="max-w-lg mx-auto px-3">
           <OAuthClientCardSkeleton />
         </SkeletonRepeater>
+      ) : authClients.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <OAuth2 />
+            </EmptyMedia>
+            <EmptyTitle>No Oauth Clients!</EmptyTitle>
+            <EmptyDescription>
+              You haven&apos;t created any oauth client yet. Get started by
+              creating your first oauth client.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <VirtualList
           config={{
