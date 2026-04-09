@@ -16,8 +16,9 @@ import {
 import { useLoading } from "@/contexts/Loading";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { authClient } from "@/lib/auth";
-import { getDeviceInfo, parseUserAgent } from "@/lib/utils";
+import { parseUserAgent } from "@/lib/utils";
 import { ActionSheetRef } from "@/registry/ActionSheet";
+import type { TDeviceInfo } from "@/typings";
 import { MonitorSmartphone } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -59,14 +60,6 @@ export function DeviceSessions() {
     );
   }, [deviceSessions]);
 
-  React.useEffect(() => {
-    (async () => {
-      const res = await getDeviceInfo();
-      console.log(res);
-      // alert(JSON.stringify(res, null, 2));
-    })();
-  }, []);
-
   if (!capabilities?.includes("multiSession")) return null;
 
   return (
@@ -79,7 +72,7 @@ export function DeviceSessions() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-1 grow w-full">
+      <div className="flex flex-col gap-1 grow w-full h-full">
         {deviceSessions.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -135,6 +128,13 @@ export function DeviceSessions() {
                       const { deviceType, os, browser } = parseUserAgent(
                         session.userAgent ?? "",
                       );
+
+                      const device = (
+                        session as typeof session & {
+                          device: TDeviceInfo;
+                        }
+                      ).device;
+
                       const isActive =
                         currentSession?.session.token === session.token;
 
@@ -147,16 +147,21 @@ export function DeviceSessions() {
                             {/* left side */}
                             <div className="flex flex-col">
                               <h3 className="font-medium capitalize">
-                                {os} • {browser}
+                                {`${device?.model || os} • ${device?.platform || browser} ${device?.platformVersion ?? ""}`}
                               </h3>
 
                               <p className="text-sm text-muted-foreground capitalize">
-                                {deviceType} device
+                                {device
+                                  ? device.mobile
+                                    ? "mobile"
+                                    : "desktop"
+                                  : deviceType}
                               </p>
                             </div>
                           </div>
                           <Button
                             variant="destructive"
+                            size="xs"
                             onClick={() => {
                               ActionSheetRef.current?.trigger(
                                 "confirmation",
@@ -196,6 +201,8 @@ export function DeviceSessions() {
             })}
           </Accordion>
         )}
+
+        <div className="h-50"></div>
       </div>
     </>
   );

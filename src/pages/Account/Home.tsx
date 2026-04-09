@@ -133,8 +133,8 @@ function Home() {
               >
                 {t("Logout")}
               </Button>
-
-              <div className="pt-10">hello</div>
+              {/* 
+              <div className="pt-10">hello</div> */}
             </div>
           </TabContent>
           <TabContent value={"personal"}>
