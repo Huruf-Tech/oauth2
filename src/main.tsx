@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 ThunderSDK.init({
   axiosConfig: {
-    baseURL: import.meta.env.VITE_API_ORIGIN,
+    baseURL: import.meta.env.VITE_API_ORIGIN || window.location.origin,
     withCredentials: true,
   },
 });
