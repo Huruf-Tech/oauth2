@@ -4,14 +4,15 @@ import { authClient } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonRepeater } from "@/components/SkeletonRepeater";
 import { useUpdateSession } from "@/hooks/useUpdateSession";
+import React from "react";
 
 function Account() {
   const { data, isPending } = authClient.useSession();
   useUpdateSession();
 
-  if (data && !isPending) {
-    const query = new URLSearchParams(window.location.search);
+  const [query] = React.useState(new URLSearchParams(window.location.search));
 
+  if (data && !isPending) {
     if (query.has("client_id")) {
       window.location.href =
         new URL(
@@ -25,7 +26,7 @@ function Account() {
     }
   }
 
-  if (!data && !isPending)
+  if ((!data && !isPending) || query.has("token"))
     return <Navigate to={"/login" + window.location.search} />;
 
   if (isPending) return <SkeletonLoading />;

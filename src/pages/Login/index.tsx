@@ -31,6 +31,7 @@ import VerifyTwoFactor from "../Account/Security/2FA/VerifyTwoFactor";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { useLoading } from "@/contexts/Loading";
+import { useOnLogin } from "@/hooks/useOnLogin";
 
 type ProviderKey = keyof typeof authProviders;
 
@@ -39,6 +40,8 @@ function Login() {
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const { error } = useAppBranding();
+
+  const triggerActionOnLogin = useOnLogin();
 
   const { capabilities } = useCapabilities();
 
@@ -108,7 +111,7 @@ function Login() {
                             return;
                           }
 
-                          navigate("/" + window.location.search);
+                          triggerActionOnLogin();
                         }}
                       >
                         <img

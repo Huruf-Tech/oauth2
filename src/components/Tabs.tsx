@@ -142,11 +142,14 @@ function TabsList({
   children,
   right,
   ...props
-}: { right?: () => React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+}: {
+  containerClassName?: string;
+  right?: () => React.ReactNode;
+} & React.HTMLAttributes<HTMLDivElement>) {
   const { listRef } = useTabs();
 
   return (
-    <div className="flex items-center gap-x-5 p-2">
+    <div className={"flex items-center gap-x-5 p-2 max-w-fit mx-auto"}>
       <div
         ref={listRef}
         className={cn(

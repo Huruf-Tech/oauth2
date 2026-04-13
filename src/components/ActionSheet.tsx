@@ -64,7 +64,7 @@ export const ActionSheet = ({ ref }: { ref: React.Ref<TActionSheetRef> }) => {
         >
           <SheetPrimitive.Close
             aria-label="Close"
-            className="absolute end-5 top-5"
+            className="absolute inset-e-5 top-5 z-10"
             render={<Button size="icon" variant="outline" />}
           >
             <XIcon />

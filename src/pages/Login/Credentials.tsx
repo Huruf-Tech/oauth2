@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth";
 import { isValidEmail } from "@/lib/utils";
+import { useOnLogin } from "@/hooks/useOnLogin";
 
 const DefaultForm = {
   email: "",
@@ -32,7 +33,7 @@ const DefaultForm = {
 function CredentialsForm({ onShowTwoStep }: { onShowTwoStep: () => void }) {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
+  const triggerActionOnLogin = useOnLogin();
   const [searchParams, setSearchParams] = useSearchParams(location.search);
   const [showPassword, setShowPassword] = React.useState(false);
   const { control, register, handleSubmit, formState } = useForm<
@@ -51,7 +52,7 @@ function CredentialsForm({ onShowTwoStep }: { onShowTwoStep: () => void }) {
           if (context.data.twoFactorRedirect) {
             // Handle the 2FA verification in place
             onShowTwoStep();
-          } else navigate("/" + window.location.search);
+          } else triggerActionOnLogin();
         },
         onError(ctx) {
           if (ctx.error.status === 403) {

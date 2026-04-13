@@ -40,23 +40,23 @@ function App() {
           <div className="isolate relative flex w-full h-full min-h-svh flex-col items-center justify-center gap-5 bg-linear-to-t from-primary/10 to-transparent to-40%">
             <Outlet />
           </div>
+
+          <ActionSheet ref={ActionSheetRef} />
+
+          <Toaster
+            theme={scheme}
+            position="top-center"
+            toastOptions={{
+              className: "!items-start !gap-3 !rounded-2xl !p-3",
+              classNames: {
+                icon: "[&>svg]:!size-6 [&>svg]:mt-2",
+                title: "!text-base",
+                description: "!text-sm !text-muted-foreground",
+                actionButton: "!p-4 !h-6 !rounded-full capitalize",
+              },
+            }}
+          />
         </LoadingProvider>
-
-        <ActionSheet ref={ActionSheetRef} />
-
-        <Toaster
-          theme={scheme}
-          position="top-center"
-          toastOptions={{
-            className: "!items-start !gap-3 !rounded-2xl !p-3",
-            classNames: {
-              icon: "[&>svg]:!size-6 [&>svg]:mt-2",
-              title: "!text-base",
-              description: "!text-sm !text-muted-foreground",
-              actionButton: "!p-4 !h-6 !rounded-full capitalize",
-            },
-          }}
-        />
       </DirectionProvider>
     </SWRConfig>
   );

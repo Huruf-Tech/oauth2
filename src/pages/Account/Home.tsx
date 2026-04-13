@@ -37,7 +37,6 @@ import { GravatarQuickEditorCore } from "@gravatar-com/quick-editor";
 import React from "react";
 import UpdateProfile from "./UpdateProfile";
 import { ActionSheetRef } from "@/registry/ActionSheet";
-import type { SessionsPromise } from "@/components/SessionSwitcher";
 
 const tabs = [
   { id: "home", icon: HomeIcon, label: "Home" },
@@ -55,9 +54,6 @@ function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sessionsPromise, setSessionsPromise] = React.useState(
-    () => authClient.multiSession.listDeviceSessions() as SessionsPromise,
-  );
 
   const { setLoading } = useLoading();
 
@@ -106,31 +102,6 @@ function Home() {
     navigate("/login");
   };
 
-  const openSessionSwitcher = () => {
-    ActionSheetRef.current?.trigger("sessionSwitcher", true, {
-      activeToken: data?.session?.token,
-      activeUser: data?.user,
-      sessionsPromise,
-      onSwitch: async (token: string) => {
-        setLoading(true);
-        await authClient.multiSession.setActive({ sessionToken: token });
-        refetch();
-        setSessionsPromise(
-          () => authClient.multiSession.listDeviceSessions() as SessionsPromise,
-        );
-        setLoading(false);
-      },
-      onAddAccount: () => {
-        // will do new account signup here
-      },
-      onManage: () => {
-        // for now redirecting to profile page
-        navigate("/account/#personal");
-      },
-      onSignOut: () => signOutUser(),
-    });
-  };
-
   return (
     <div className="w-full h-full bg-muted-foreground/5 dark:bg-muted/30">
       <Tabs
@@ -144,7 +115,9 @@ function Home() {
           right={() => (
             <Avatar
               className={"size-10 border-3 border-primary/30 cursor-pointer"}
-              onClick={openSessionSwitcher}
+              onClick={() =>
+                ActionSheetRef.current?.trigger("sessionSwitcher", true)
+              }
             >
               <AvatarImage src={data?.user?.image ?? undefined} />
               <AvatarFallback className="text-xl">
