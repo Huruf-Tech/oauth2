@@ -8,7 +8,7 @@
     "register:hooks": "git config core.hooksPath .githooks && chmod +x .githooks/commit-msg && chmod +x .githooks/pre-commit",
     "fmt": "prettier --write .",
     "lint": "eslint .",
-    "build": "tsc -b && vite build --base=/auth/",
+    "build": "tsc -b && vite build --base=/auth",
     "preview": "vite preview"
   },
   "dependencies": {
