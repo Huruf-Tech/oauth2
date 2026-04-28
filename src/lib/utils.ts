@@ -117,8 +117,7 @@ export function parseUserAgent(ua: string) {
 
   const isMobile = /mobi|android/i.test(userAgent);
 
-  const isTablet =
-    /ipad/i.test(userAgent) ||
+  const isTablet = /ipad/i.test(userAgent) ||
     /tablet/i.test(userAgent) ||
     (/android/i.test(userAgent) && !/mobile/i.test(userAgent));
 
@@ -171,8 +170,8 @@ export const handleUpload = async (
 ) => {
   const path = opts?.path instanceof Array ? opts.path.join("/") : opts?.path;
   // Authenticate imagekit token
-  const { signature, expire, token, publicKey } =
-    await ThunderSDK.imageKit.auth();
+  const { signature, expire, token, publicKey } = await ThunderSDK.imageKit
+    .auth();
   // Call the ImageKit SDK upload function with the required parameters and callbacks.
   return await upload({
     // Authentication parameters
@@ -197,4 +196,15 @@ export function transformImage(
   opts?: { width: number; height: number },
 ) {
   return [url, `?tr=w-${opts?.width ?? 100},h-${opts?.height ?? 100}`].join("");
+}
+
+export function resolveURL(path?: string) {
+  const baseUrl = new URL(import.meta.env.BASE_URL, window.location.origin)
+    .toString().trim().replace(/\/$/, "");
+
+  if (path) {
+    return [baseUrl, path.trim().replace(/^\//, "")].join("/");
+  }
+
+  return baseUrl;
 }

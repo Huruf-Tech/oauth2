@@ -22,7 +22,7 @@ import {
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { authClient } from "@/lib/auth";
 import { authProviders } from "@/lib/providers";
-import { cn } from "@/lib/utils";
+import { cn, resolveURL } from "@/lib/utils";
 import CredentialsForm from "./Credentials";
 import MagicLinkForm from "./MagicLink";
 import { toast } from "sonner";
@@ -102,7 +102,7 @@ function Login() {
                           const { error } = await authClient.signIn
                             .social({
                               provider: key,
-                              callbackURL: window.location.origin,
+                              callbackURL: resolveURL(),
                             })
                             .finally(() => setLoading(false));
 

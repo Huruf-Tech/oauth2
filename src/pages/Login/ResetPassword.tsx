@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth";
-import { isValidEmail } from "@/lib/utils";
+import { isValidEmail, resolveURL } from "@/lib/utils";
 
 const DefaultForm = {
   email: "",
@@ -37,8 +37,7 @@ function ResetPassword() {
   const onSubmit: SubmitHandler<typeof DefaultForm> = async (formData) => {
     const { data, error } = await authClient.requestPasswordReset({
       email: formData.email,
-      redirectTo:
-        window.location.origin + "/change-password" + window.location.search,
+      redirectTo: resolveURL("/change-password" + window.location.search),
     });
 
     if (error) {
