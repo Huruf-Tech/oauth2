@@ -17,7 +17,7 @@ function Account() {
       window.location.href =
         new URL(
           "/oauth/authorize",
-          import.meta.env.VITE_API_ORIGIN,
+          import.meta.env.VITE_API_ORIGIN || window.location.origin,
         ).toString() + window.location.search;
 
       return;
