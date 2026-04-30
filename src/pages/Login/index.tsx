@@ -58,6 +58,11 @@ function Login() {
     [capabilities],
   );
 
+  const signup = React.useMemo(
+    () => capabilities?.includes("signup"),
+    [capabilities],
+  );
+
   const enabledProviders = React.useMemo(() => {
     const caps = new Set(capabilities ?? []);
     return (
@@ -174,14 +179,16 @@ function Login() {
                     {t("Sign-in with Passkey")}
                   </Button>
                 )}
-                <FieldDescription className="text-center">
-                  <Trans i18nKey={"noAccount"}>
-                    Don't have an account?{" "}
-                    <Link to="/signup" viewTransition>
-                      Sign up
-                    </Link>
-                  </Trans>
-                </FieldDescription>
+                {signup && (
+                  <FieldDescription className="text-center">
+                    <Trans i18nKey={"noAccount"}>
+                      Don't have an account?{" "}
+                      <Link to="/signup" viewTransition>
+                        Sign up
+                      </Link>
+                    </Trans>
+                  </FieldDescription>
+                )}
               </Field>
             </CardContent>
           </Card>
