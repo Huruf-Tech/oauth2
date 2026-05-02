@@ -16,6 +16,7 @@ import { ThunderSDK } from "thunder-sdk";
 import { toast } from "sonner";
 import { apiOrigin } from "./lib/api";
 import { Invite } from "./pages/Account/Members/Invite";
+import Logout from "./pages/Logout";
 
 ThunderSDK.init({
   logs: true,
@@ -76,6 +77,10 @@ const router = createBrowserRouter(
         {
           path: "/signup",
           element: <Signup />,
+        },
+        {
+          path: "/logout",
+          element: <Logout />,
         },
       ],
     },

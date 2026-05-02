@@ -61,7 +61,7 @@ function Home() {
 
   const { data, refetch } = authClient.useSession();
 
-  const fullName = data?.user?.name || "Unamed";
+  const fullName = data?.user?.name || "Unnamed";
   const verified = data?.user?.emailVerified;
   const email = data?.user.email ?? "unknown";
 
@@ -126,6 +126,7 @@ function Home() {
               <Button
                 onClick={async () => {
                   setLoading(true);
+                  
                   const { error } = await authClient
                     .signOut()
                     .finally(() => setLoading(false));
