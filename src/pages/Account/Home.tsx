@@ -90,6 +90,7 @@ function Home() {
           left={() =>
             returnUri && (
               <Button
+                variant={"secondary"}
                 size={"icon-sm"}
                 onClick={() => {
                   window.location.href = returnUri;
