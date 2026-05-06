@@ -100,11 +100,13 @@ function TabsList({
   containerClassName = "max-w-fit mx-auto",
   variant = "default",
   children,
+  left,
   right,
   ...props
 }: {
   variant?: "default" | "filled";
   containerClassName?: string;
+  left?: () => React.ReactNode;
   right?: () => React.ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>) {
   const { listRef } = useTabs();
@@ -112,6 +114,7 @@ function TabsList({
   return (
     <div className={cn("p-2", containerClassName)}>
       <div className="flex items-center gap-x-5 rounded-xl w-full">
+        {left?.()}
         <div
           ref={listRef}
           className={cn(

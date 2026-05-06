@@ -25,7 +25,6 @@ export const Invite = () => {
         : null,
   );
 
-  // redirct if not logged in
   if (!isPending && !session)
     return (
       <Navigate

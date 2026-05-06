@@ -2,6 +2,7 @@ import {
   ArrowUpFromLine,
   Calendar,
   CheckCircle2,
+  ChevronLeftIcon,
   Contact2,
   HomeIcon,
   ImageIcon,
@@ -73,6 +74,8 @@ function Home() {
       : search;
   }, [searchParams]);
 
+  const returnUri = searchParams.get("returnUri");
+
   return (
     <div className="w-full h-full">
       <Tabs
@@ -84,6 +87,18 @@ function Home() {
       >
         <TabsList
           className="w-full max-w-fit mx-auto"
+          left={() =>
+            returnUri && (
+              <Button
+                size={"icon-sm"}
+                onClick={() => {
+                  window.location.href = returnUri;
+                }}
+              >
+                <ChevronLeftIcon />
+              </Button>
+            )
+          }
           right={() => (
             <Avatar
               className={"size-10 border-3 border-primary/30 cursor-pointer"}
@@ -126,7 +141,7 @@ function Home() {
               <Button
                 onClick={async () => {
                   setLoading(true);
-                  
+
                   const { error } = await authClient
                     .signOut()
                     .finally(() => setLoading(false));
