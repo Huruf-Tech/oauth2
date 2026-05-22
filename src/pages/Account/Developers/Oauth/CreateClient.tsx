@@ -19,13 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { generateSecret, handleUpload } from "@/lib/utils";
 import { XCircleIcon } from "lucide-react";
@@ -37,6 +30,18 @@ import React from "react";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useLoading } from "@/contexts/Loading";
 import { authClient } from "@/lib/auth";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxPopup,
+  ComboboxValue,
+} from "@/components/ui/combobox";
+import useSWR from "swr";
 
 const DefaultForm: Parameters<
   typeof ThunderSDK.oauthClients.create
@@ -46,10 +51,6 @@ const DefaultForm: Parameters<
   secret: "",
   redirectUris: [],
   allowedScopes: [],
-};
-
-const scopes: Record<string, string> = {
-  offline_access: "Offline Access",
 };
 
 function CreateClient({
@@ -72,17 +73,14 @@ function CreateClient({
       values: data,
     });
 
-  const values = Object.keys(scopes);
-
-  function renderValue(value: (keyof typeof scopes)[]) {
-    if (value.length === 0) {
-      return "Select scopes";
-    }
-    const firstScope = value[0] ? scopes[value[0]] : "";
-    const additionalScopes =
-      value.length > 1 ? ` (+${value.length - 1} more)` : "";
-    return firstScope + additionalScopes;
-  }
+  const { data: policies, isLoading: loadingPolicies } = useSWR(
+    "accessControlPolicies.get",
+    async () =>
+      await ThunderSDK.accessControlPolicies.get({
+        params: {},
+        query: {},
+      }),
+  );
 
   const onSubmit = async (formData: typeof DefaultForm) => {
     try {
@@ -245,24 +243,53 @@ function CreateClient({
                         : true,
                   }}
                   render={({ field }) => (
-                    <Select
-                      id="allowedScopes"
+                    <Combobox
+                      items={[
+                        "full_access",
+                        "offline_access",
+                        ...(policies?.results ?? [])
+                          .filter((v) => v.name !== "root")
+                          .map((v) => v.name),
+                      ]}
+                      multiple
                       aria-label="Select scopes"
                       value={field.value}
-                      onValueChange={field.onChange}
-                      multiple
+                      onValueChange={(value) => field.onChange(value)}
                     >
-                      <SelectTrigger>
-                        <SelectValue>{renderValue}</SelectValue>
-                      </SelectTrigger>
-                      <SelectPopup alignItemWithTrigger={false}>
-                        {values.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {scopes[value]}
-                          </SelectItem>
-                        ))}
-                      </SelectPopup>
-                    </Select>
+                      <ComboboxChips
+                        startAddon={loadingPolicies ? <Spinner /> : null}
+                      >
+                        <ComboboxValue>
+                          {(values: string[]) => (
+                            <>
+                              {values?.map((value) => (
+                                <ComboboxChip key={value} aria-label={value}>
+                                  {value}
+                                </ComboboxChip>
+                              ))}
+                              <ComboboxChipsInput
+                                placeholder={
+                                  values.length > 0
+                                    ? undefined
+                                    : "Select an item..."
+                                }
+                                aria-label="Select an item"
+                              />
+                            </>
+                          )}
+                        </ComboboxValue>
+                      </ComboboxChips>
+                      <ComboboxPopup className="w-full">
+                        <ComboboxEmpty>No results found.</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item} value={item}>
+                              {item}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxPopup>
+                    </Combobox>
                   )}
                 />
                 <FieldError>
@@ -301,7 +328,6 @@ function CreateClient({
                           id="redirectUris"
                           aria-label="Enter your domain"
                           type="url"
-                          className="*:[input]:px-0!"
                           placeholder={"e.g https://myapp.com"}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {

@@ -138,20 +138,13 @@ function Security() {
           }
         },
       },
-      // {
-      //   icon: MonitorSmartphone,
-      //   label: "Device Sessions",
-      //   value: "deviceSessions",
-      //   content: "3 sessions",
-      //   onClick: async () => {},
-      // },
     ],
     [t, isLoading, app, mutate, passkeyCount, userSession, setLoading],
   );
 
   return (
     <div className="flex flex-col gap-5 items-start w-full h-full px-3 max-w-lg mx-auto">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col">
         <h3 className="text-xl font-medium">{t("Security & sign-in")}</h3>
         <p className="text-sm text-muted-foreground">
           {t("Add an extra layer of security on your account")}

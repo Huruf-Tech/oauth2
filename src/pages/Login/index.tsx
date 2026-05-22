@@ -73,10 +73,6 @@ function Login() {
     ).filter(([key]) => caps.has(key)); // if capabilities isn't typed as ProviderKey[], see note below
   }, [capabilities]);
 
-  React.useEffect(() => {
-    if (magicLink) setShowMagicLink(true);
-  }, [magicLink]);
-
   return (
     <FormWrapper title={t("Login")}>
       {showTwoStep ? (

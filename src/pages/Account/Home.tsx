@@ -3,6 +3,7 @@ import {
   Calendar,
   CheckCircle2,
   ChevronLeftIcon,
+  Code,
   Contact2,
   HomeIcon,
   ImageIcon,
@@ -32,8 +33,6 @@ import {
 import { Button } from "@/components/ui/button";
 import Item from "@/components/Item";
 import { Badge } from "@/components/ui/badge";
-import OAuth2 from "@/components/custom-icons/oauth2";
-import OAuth from "./Oauth";
 import Security from "./Security";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router";
@@ -43,15 +42,16 @@ import UpdateProfile from "./UpdateProfile";
 import { ActionSheetRef } from "@/registry/ActionSheet";
 import { Members } from "./Members";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { Developers } from "./Developers";
 
 const tabs = [
   { id: "home", icon: HomeIcon, label: "Home" },
   { id: "personal", icon: Contact2, label: "Personal info" },
   { id: "security", icon: Shield, label: "Security & Sign-in" },
   {
-    id: "oauth2",
-    icon: OAuth2,
-    label: "OAuth2",
+    id: "developers",
+    icon: Code,
+    label: "Developers",
   },
 ];
 
@@ -81,8 +81,9 @@ function Home() {
       <Tabs
         defaultValue={defaultValue}
         onValueChange={(tab) => {
-          searchParams.set("tab", tab);
-          setSearchParams(searchParams);
+          const nextSearchParams = new URLSearchParams();
+          nextSearchParams.set("tab", tab);
+          setSearchParams(nextSearchParams);
         }}
       >
         <TabsList
@@ -140,6 +141,7 @@ function Home() {
               <p>{data?.user?.email}</p>
 
               <Button
+                variant="destructive"
                 onClick={async () => {
                   setLoading(true);
 
@@ -160,7 +162,7 @@ function Home() {
           <TabContent value={"personal"}>
             <div className="flex flex-col gap-5 items-start w-full h-full px-3 max-w-lg mx-auto">
               <div className="flex items-center justify-between gap-3 w-full">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col">
                   <h3 className="text-xl font-medium">{t("Personal info")}</h3>
                   <p className="text-sm text-muted-foreground">
                     {t("Manage details that make App work better for you")}
@@ -309,12 +311,14 @@ function Home() {
           <TabContent value={"security"}>
             <Security />
           </TabContent>
-          <TabContent value={"oauth2"}>
-            <OAuth />
+          <TabContent value={"developers"}>
+            <Developers />
           </TabContent>
-          <TabContent value={"members"}>
-            <Members />
-          </TabContent>
+          {searchParams.get("tenant") && (
+            <TabContent value={"members"}>
+              <Members />
+            </TabContent>
+          )}
         </TabPanel>
 
         <TabBullets />

@@ -5,7 +5,7 @@ import CreateClient from "./CreateClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, transformImage } from "@/lib/utils";
 import Item from "@/components/Item";
-import { SquarePenIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeft, SquarePenIcon, Trash2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Group, GroupSeparator } from "@/components/ui/group";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,8 @@ import {
 } from "@/components/ui/empty";
 import { EmptyList } from "@/components/EmptyList";
 
-function OAuth() {
+function OAuth({ onBack }: { onBack?: () => void }) {
   const { t } = useTranslation();
-
   const { setLoading } = useLoading();
 
   const {
@@ -46,12 +45,17 @@ function OAuth() {
 
   return (
     <div className="flex flex-col gap-5 items-start w-full h-full">
-      <div className="flex items-center justify-between gap-3 w-full sticky top-0 z-10 max-w-lg mx-auto px-3">
-        <div className="flex flex-col gap-2">
-          <h3 className="text-xl font-medium">{t("OAuth2")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("Manage your oauth2 clients")}
-          </p>
+      <div className="flex items-center justify-between gap-3 w-full sticky top-0 z-10 px-3">
+        <div className="flex items-center gap-5 w-full">
+          <Button size="icon-sm" variant="outline" onClick={onBack}>
+            <ArrowLeft />
+          </Button>
+          <div className="flex flex-col">
+            <h3 className="text-xl font-medium">{t("OAuth2")}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("Manage your oauth2 clients")}
+            </p>
+          </div>
         </div>
 
         <CreateClient onSuccess={mutate} />
