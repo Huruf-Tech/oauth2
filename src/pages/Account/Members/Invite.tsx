@@ -19,7 +19,7 @@ export const Invite = () => {
       session
         ? await ThunderSDK.tenantMembers.create({
             body: {
-              invite: _id,
+              invite: _id!,
             },
           })
         : null,

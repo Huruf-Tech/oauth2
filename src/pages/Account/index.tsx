@@ -8,6 +8,7 @@ import React from "react";
 
 function Account() {
   const { data, isPending } = authClient.useSession();
+  
   useUpdateSession();
 
   const [query] = React.useState(new URLSearchParams(window.location.search));
