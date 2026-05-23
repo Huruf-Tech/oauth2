@@ -147,7 +147,7 @@ export function APIKeys({ onBack }: { onBack?: () => void }) {
                               setLoading(true);
                               el?.classList.add("opacity-30");
 
-                              await ThunderSDK.oauthClients.del({
+                              await ThunderSDK.apiKeys.del({
                                 params: { id: item._id },
                               });
 
