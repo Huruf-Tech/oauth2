@@ -37,8 +37,9 @@ import useSWR from "swr";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { formatDateForInput, getInitials } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { SaveSecret } from "./SaveSecret";
 
 type TForm = Parameters<typeof ThunderSDK.apiKeys.create>[number]["body"];
 
@@ -61,14 +62,15 @@ function CreateAPIKey({
   onSuccess?: () => void;
 }) {
   const { t } = useTranslation();
+  const [secret, setSecret] = React.useState<string>();
 
-  const { control, register, handleSubmit, formState } = useForm<
+  const { control, register, handleSubmit, formState, reset } = useForm<
     typeof DefaultForm
   >({
     defaultValues: DefaultForm,
     values: {
-      ...data,
       ...DefaultForm,
+      ...data,
       resourceGrant: Object.entries(data?.resourceGrant ?? {}).map(
         ([tenantId, scopes]) => ({ tenantId, scopes }),
       ),
@@ -107,13 +109,17 @@ function CreateAPIKey({
         return;
       }
 
+      const secret = `sk-${crypto.randomUUID()}`;
+
       await ThunderSDK.apiKeys.create({
         body: {
           ...formData,
-          secret: `sk-${crypto.randomUUID()}`,
+          secret,
           resourceGrant,
         },
       });
+
+      setSecret(secret);
 
       onSuccess?.();
     } catch (error) {
@@ -194,6 +200,7 @@ function CreateAPIKey({
                               <ComboboxInput
                                 placeholder="Select tenant..."
                                 startAddon={loadingTenants && <Spinner />}
+                                disabled={loadingTenants}
                               />
                               <ComboboxPopup>
                                 <ComboboxEmpty>No results found.</ComboboxEmpty>
@@ -258,6 +265,41 @@ function CreateAPIKey({
               )}
 
               <Field>
+                <FieldLabel htmlFor={"expiresAt"}>{t("Expires At")}</FieldLabel>
+                <Controller
+                  name="expiresAt"
+                  control={control}
+                  rules={{
+                    validate: (value) => {
+                      if (!value) return true;
+
+                      const selectedDate = new Date(value);
+                      selectedDate.setHours(0, 0, 0, 0);
+
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      return (
+                        selectedDate > today ||
+                        t("Expiration date must be greater than current time!")
+                      );
+                    },
+                  }}
+                  render={({ field }) => (
+                    <Input
+                      id={"expiresAt"}
+                      type="date"
+                      placeholder={t("Select expiration date")}
+                      defaultValue={formatDateForInput(field.value)}
+                      onChange={(e) => field.onChange(e.target.valueAsDate)}
+                    />
+                  )}
+                />
+
+                <FieldError>{formState.errors.expiresAt?.message}</FieldError>
+              </Field>
+
+              <Field>
                 <div className="flex items-start gap-2">
                   <Checkbox
                     checked={fields.length > 0}
@@ -289,6 +331,10 @@ function CreateAPIKey({
             {formState.isSubmitting && <Spinner />}
             {t(data ? "Update" : "Submit")}
           </Button>
+
+          {formState.isSubmitted && secret ? (
+            <SaveSecret secret={secret} onDone={reset} />
+          ) : null}
         </DialogFooter>
       </DialogPopup>
     </Dialog>
@@ -336,6 +382,7 @@ function ScopesInput({
                 placeholder={
                   values.length > 0 ? undefined : "Select an item..."
                 }
+                disabled={loadingPolicies}
                 aria-label="Select an item"
               />
             </>

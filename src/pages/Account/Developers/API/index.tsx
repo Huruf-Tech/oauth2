@@ -2,7 +2,12 @@ import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { ThunderSDK } from "thunder-sdk";
 import Item from "@/components/Item";
-import { ArrowLeft, SquarePenIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowLeft,
+  InfinityIcon,
+  SquarePenIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { Group, GroupSeparator } from "@/components/ui/group";
 import { Button } from "@/components/ui/button";
 import CopyToClipboard from "@/components/CopyToClipboard";
@@ -19,6 +24,8 @@ import {
 } from "@/components/ui/empty";
 import { EmptyList } from "@/components/EmptyList";
 import CreateAPIKey from "./Create";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/utils";
 
 export function APIKeys({ onBack }: { onBack?: () => void }) {
   const { t } = useTranslation();
@@ -96,65 +103,75 @@ export function APIKeys({ onBack }: { onBack?: () => void }) {
                   data-index={item._id}
                   className={"item-start transition-all ease-in-out"}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1">
-                        <h3 className="capitalize font-medium line-clamp-1">
-                          {item.name}
-                        </h3>
-                      </div>
-                      <CopyToClipboard text={item._id} />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col justify-between items-end gap-3">
-                    <Group aria-label="Client actions">
-                      <CreateAPIKey
-                        data={item}
-                        render={
-                          <Button variant="outline" size="icon-sm">
-                            <SquarePenIcon />
-                          </Button>
-                        }
-                        onSuccess={mutate}
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex justify-between w-full">
+                      <CopyToClipboard
+                        label="Publishable Key"
+                        text={item._id}
                       />
-                      <GroupSeparator />
-                      <Button
-                        variant="destructive-outline"
-                        size="icon-sm"
-                        onClick={async () => {
-                          const el = document.querySelector(
-                            `[data-index="${item._id}"]`,
-                          );
 
-                          try {
-                            setLoading(true);
-                            el?.classList.add("opacity-30");
+                      <Badge variant="error" className="max-w-fit px-2">
+                        {item.expiresAt ? (
+                          `Expire ${formatDate(item.expiresAt, "MMM dd, yyyy")}`
+                        ) : (
+                          <InfinityIcon />
+                        )}
+                      </Badge>
+                    </div>
 
-                            await ThunderSDK.oauthClients.del({
-                              params: { id: item._id },
-                            });
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="capitalize line-clamp-1 text-sm">
+                        {item.name}
+                      </p>
 
-                            el?.classList.add(
-                              "animate-out",
-                              "fade-out",
-                              "slide-out-to-right-70",
-                              "duration-500",
+                      <Group aria-label="Client actions">
+                        <CreateAPIKey
+                          data={item}
+                          render={
+                            <Button variant="outline" size="icon-sm">
+                              <SquarePenIcon />
+                            </Button>
+                          }
+                          onSuccess={mutate}
+                        />
+                        <GroupSeparator />
+                        <Button
+                          variant="destructive-outline"
+                          size="icon-sm"
+                          onClick={async () => {
+                            const el = document.querySelector(
+                              `[data-index="${item._id}"]`,
                             );
 
-                            authClients.filter((v) => v._id !== item._id);
+                            try {
+                              setLoading(true);
+                              el?.classList.add("opacity-30");
 
-                            setTimeout(() => mutate(), 400);
-                          } catch (error) {
-                            console.error("error", error);
-                          } finally {
-                            setLoading(false);
-                          }
-                        }}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </Group>
+                              await ThunderSDK.oauthClients.del({
+                                params: { id: item._id },
+                              });
+
+                              el?.classList.add(
+                                "animate-out",
+                                "fade-out",
+                                "slide-out-to-right-70",
+                                "duration-500",
+                              );
+
+                              authClients.filter((v) => v._id !== item._id);
+
+                              setTimeout(() => mutate(), 400);
+                            } catch (error) {
+                              console.error("error", error);
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </Group>
+                    </div>
                   </div>
                 </Item>
               );
