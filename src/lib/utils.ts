@@ -117,8 +117,7 @@ export function parseUserAgent(ua: string) {
 
   const isMobile = /mobi|android/i.test(userAgent);
 
-  const isTablet =
-    /ipad/i.test(userAgent) ||
+  const isTablet = /ipad/i.test(userAgent) ||
     /tablet/i.test(userAgent) ||
     (/android/i.test(userAgent) && !/mobile/i.test(userAgent));
 
@@ -171,8 +170,8 @@ export const handleUpload = async (
 ) => {
   const path = opts?.path instanceof Array ? opts.path.join("/") : opts?.path;
   // Authenticate imagekit token
-  const { signature, expire, token, publicKey } =
-    await ThunderSDK.imageKit.auth();
+  const { signature, expire, token, publicKey } = await ThunderSDK.imageKit
+    .auth();
   // Call the ImageKit SDK upload function with the required parameters and callbacks.
   return await upload({
     // Authentication parameters
@@ -210,6 +209,17 @@ export function resolveURL(path?: string) {
   }
 
   return baseUrl;
+}
+
+export function combineSearchParams(search1: string, search2: string) {
+  const params1 = new URLSearchParams(search1);
+  const params2 = new URLSearchParams(search2);
+
+  for (const [key, value] of params2.entries()) {
+    params1.set(key, value);
+  }
+
+  return params1.toString();
 }
 
 export function formatDateForInput(

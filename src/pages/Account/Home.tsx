@@ -82,8 +82,10 @@ function Home() {
       <Tabs
         defaultValue={defaultValue}
         onValueChange={(tab) => {
-          const nextSearchParams = new URLSearchParams();
+          const nextSearchParams = new URLSearchParams(window.location.search);
+
           nextSearchParams.set("tab", tab);
+
           setSearchParams(nextSearchParams);
         }}
       >
@@ -278,7 +280,8 @@ function Home() {
                             await authClient
                               .sendVerificationEmail({
                                 email,
-                                callbackURL: resolveURL() + window.location.search,
+                                callbackURL:
+                                  resolveURL() + window.location.search,
                               })
                               .finally(() => setLoading(false));
                           }}

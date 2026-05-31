@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { ActionSheetRef } from "@/registry/ActionSheet";
 import { Skeleton } from "../../components/ui/skeleton";
 import { SkeletonRepeater } from "../../components/SkeletonRepeater";
-import { transformImage } from "@/lib/utils";
+import { combineSearchParams, resolveURL, transformImage } from "@/lib/utils";
 
 export const SessionSwitcher = () => {
   const { t } = useTranslation();
@@ -128,7 +128,11 @@ export const SessionSwitcher = () => {
             variant="outline"
             onClick={() => {
               window.open(
-                "/login" + `/?token=${session?.session.token}`,
+                resolveURL("/login") +
+                  combineSearchParams(
+                    window.location.search,
+                    `/?token=${session?.session.token}`,
+                  ),
                 "_blank",
               );
             }}
