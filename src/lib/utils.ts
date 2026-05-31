@@ -219,7 +219,7 @@ export function combineSearchParams(search1: string, search2: string) {
     params1.set(key, value);
   }
 
-  return params1.toString();
+  return "?" + params1.toString();
 }
 
 export function formatDateForInput(
