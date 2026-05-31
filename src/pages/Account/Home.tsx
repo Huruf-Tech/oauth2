@@ -278,7 +278,7 @@ function Home() {
                             await authClient
                               .sendVerificationEmail({
                                 email,
-                                callbackURL: resolveURL(),
+                                callbackURL: resolveURL() + window.location.search,
                               })
                               .finally(() => setLoading(false));
                           }}

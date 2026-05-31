@@ -103,7 +103,8 @@ function Login() {
                           const { error } = await authClient.signIn
                             .social({
                               provider: key,
-                              callbackURL: resolveURL(),
+                              callbackURL:
+                                resolveURL() + window.location.search,
                             })
                             .finally(() => setLoading(false));
 

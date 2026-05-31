@@ -37,7 +37,7 @@ function ResetPassword() {
   const onSubmit: SubmitHandler<typeof DefaultForm> = async (formData) => {
     const { data, error } = await authClient.requestPasswordReset({
       email: formData.email,
-      redirectTo: resolveURL("/change-password" + window.location.search),
+      redirectTo: resolveURL("/change-password") + window.location.search,
     });
 
     if (error) {
