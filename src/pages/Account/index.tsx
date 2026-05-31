@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonRepeater } from "@/components/SkeletonRepeater";
 import { useUpdateSession } from "@/hooks/useUpdateSession";
 import React from "react";
+import { resolveURL } from "@/lib/utils";
 
 function Account() {
   const { data, isPending } = authClient.useSession();
@@ -16,10 +17,7 @@ function Account() {
   if (data && !isPending) {
     if (query.has("client_id")) {
       window.location.href =
-        new URL(
-          "/oauth/authorize",
-          import.meta.env.VITE_API_ORIGIN || window.location.origin,
-        ).toString() + window.location.search;
+        resolveURL("/oauth/authorize") + window.location.search;
 
       return;
     } else if (query.has("redirect")) {

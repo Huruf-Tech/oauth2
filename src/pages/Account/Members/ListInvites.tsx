@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import VirtualList from "@/components/VirutalList";
 import { useLoading } from "@/contexts/Loading";
-import { getInitials } from "@/lib/utils";
+import { getInitials, resolveURL } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { ThunderSDK } from "thunder-sdk";
 import useSWR from "swr";
@@ -112,10 +112,7 @@ export function ListInvites() {
                       <div className="flex flex-row items-center gap-1.5">
                         <h3 className="font-medium ">{t("Email")}</h3>
                         <CopyToClipboard
-                          text={new URL(
-                            `invite/${item._id}`,
-                            window.location.origin,
-                          ).toString()}
+                          text={resolveURL(`invite/${item._id}`)}
                           label="Invite Link"
                         />
                       </div>

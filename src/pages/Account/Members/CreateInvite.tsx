@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router";
-import { isValidEmail } from "@/lib/utils";
+import { isValidEmail, resolveURL } from "@/lib/utils";
 import { useMyPolicies } from "@/hooks/useMyPolicies";
 
 const DefaultForm: Parameters<
@@ -51,10 +51,7 @@ export const CreateInvite = ({ onSuccess }: { onSuccess?: () => void }) => {
         body: {
           email: formData.email,
           role: formData.role,
-          url: new URL(
-            `invite/{{_id}}`,
-            new URL(import.meta.env.BASE_URL, window.location.origin),
-          ).toString(),
+          url: resolveURL("invite/{{_id}}"),
         },
         axiosConfig: {
           headers: {

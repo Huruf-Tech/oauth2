@@ -18,6 +18,7 @@ import { useLoading } from "@/contexts/Loading";
 import { Badge } from "@/components/ui/badge";
 import DisableTwoFactor from "./2FA/DisableTwoFactor";
 import { DeviceSessions } from "./DeviceSessions";
+import { resolveURL } from "@/lib/utils";
 
 function Security() {
   const { t } = useTranslation();
@@ -122,9 +123,7 @@ function Security() {
             const { data, error } = await authClient.requestPasswordReset({
               email: userSession.user.email,
               redirectTo:
-                window.location.origin +
-                "/change-password" +
-                window.location.search,
+                resolveURL("/change-password") + window.location.search,
             });
 
             setLoading(false);

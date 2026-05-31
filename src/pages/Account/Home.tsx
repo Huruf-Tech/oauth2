@@ -28,6 +28,7 @@ import {
   formatDate,
   getInitials,
   handleUpload,
+  resolveURL,
   transformImage,
 } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -277,7 +278,7 @@ function Home() {
                             await authClient
                               .sendVerificationEmail({
                                 email,
-                                callbackURL: window.location.origin,
+                                callbackURL: resolveURL(),
                               })
                               .finally(() => setLoading(false));
                           }}
