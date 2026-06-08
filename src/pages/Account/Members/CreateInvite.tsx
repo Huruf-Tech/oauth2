@@ -102,8 +102,12 @@ export const CreateInvite = ({ onSuccess }: { onSuccess?: () => void }) => {
                   render={({ field }) => (
                     <Select
                       id="role"
+                      items={(myPolicies?.subRoles ?? []).map((v) => ({
+                        label: v,
+                        value: v,
+                      }))}
                       value={field.value ?? ""}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => field.onChange(value)}
                       disabled={isLoading} // disabling while fetching data
                     >
                       <SelectTrigger
@@ -118,7 +122,7 @@ export const CreateInvite = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                       <SelectContent>
                         <SelectGroup>
-                          {myPolicies?.subRoles?.map((role, idx) => (
+                          {(myPolicies?.subRoles ?? []).map((role, idx) => (
                             <SelectItem
                               key={idx}
                               value={role}
