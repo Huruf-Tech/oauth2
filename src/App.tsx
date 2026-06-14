@@ -16,7 +16,8 @@ function App() {
   const [searchParams] = useSearchParams();
   const { app } = useAppBranding();
 
-  useFavicon(app?.logo);
+  useFavicon(app?.icon ?? app?.logo);
+
   const { scheme } = useColorScheme(searchParams.get("theme") as TScheme);
   const { direction } = useLanguage(searchParams.get("lng"));
 

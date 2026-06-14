@@ -23,7 +23,7 @@ function FormWrapper({
   const { isLoading: capLoading } = useCapabilities();
 
   const appName = app?.name ?? "Huruf Tech";
-  const logo = app?.logo ?? HurufLogo;
+  const logo = app?.logo ?? app?.icon ?? HurufLogo;
 
   const loading = isLoading || capLoading;
 
