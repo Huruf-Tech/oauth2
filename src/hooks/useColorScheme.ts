@@ -1,27 +1,31 @@
 import React from "react";
 
-export type TScheme = "dark" | "light" | "system";
+const defaultScheme = ["dark", "light", "system"] as const;
 
-export function useColorScheme(scheme: TScheme = "system") {
+export type TScheme = typeof defaultScheme[number];
+
+export function useColorScheme(scheme?: TScheme | null) {
+  let resolvedScheme =
+    (scheme ?? localStorage.getItem("theme") ?? "system") as TScheme;
+
+  if (!defaultScheme.includes(resolvedScheme)) resolvedScheme = "system";
+
   const Scheme = React.useMemo(() => {
-    const currentScheme = window.matchMedia("(prefers-color-scheme: dark)")
-      .matches
+    const systemScheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
       ? "dark"
       : "light";
+    const selectedScheme = resolvedScheme === "system"
+      ? systemScheme
+      : resolvedScheme;
 
     const root = window.document.documentElement;
+
     root.classList.remove("light", "dark");
+    root.classList.add(selectedScheme);
 
-    if (scheme)
-      root.classList.add(scheme === "system" ? currentScheme : scheme);
-    else root.classList.add(currentScheme);
-
-    return scheme
-      ? scheme === "system"
-        ? currentScheme
-        : scheme
-      : currentScheme;
-  }, [scheme]);
+    return selectedScheme;
+  }, [resolvedScheme]);
 
   return { scheme: Scheme };
 }
