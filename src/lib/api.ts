@@ -1,11 +1,14 @@
-export const apiOrigin =
-  import.meta.env.VITE_API_ORIGIN || window.location.origin;
+export const apiOrigin = import.meta.env.VITE_API_ORIGIN ||
+  window.location.origin;
 
 export type TAppBranding = {
   name: string;
   description?: string;
+  icon?: string;
   logo?: string;
   homepageURL?: string;
+  termsURL?: string;
+  privacyURL?: string;
   theme?: Record<string, string>;
 };
 

@@ -39,7 +39,7 @@ function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setLoading } = useLoading();
-  const { error } = useAppBranding();
+  const { app, error } = useAppBranding();
 
   const triggerActionOnLogin = useOnLogin();
 
@@ -192,8 +192,11 @@ function Login() {
           <FieldDescription className="px-6 text-center">
             <Trans i18nKey={"agreement"}>
               By clicking continue, you agree to our{" "}
-              <a href="#">Terms of Service</a> and{" "}
-              <a href="#">Privacy Policy</a>.
+              <a href={app?.termsURL ?? "#terms-of-service"}>
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href={app?.privacyURL ?? "#privacy-policy"}>Privacy Policy</a>.
             </Trans>
           </FieldDescription>
         </div>
