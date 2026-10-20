@@ -1,212 +1,158 @@
-import { EmptyList } from "@/components/EmptyList";
-import Item from "@/components/Item";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { useLoading } from "@/contexts/Loading";
-import { useCapabilities } from "@/hooks/useCapabilities";
-import { authClient } from "@/lib/auth";
-import { parseUserAgent } from "@/lib/utils";
-import { ActionSheetRef } from "@/registry/ActionSheet";
-import type { TDeviceInfo } from "@/typings";
-import React from "react";
+  LaptopIcon,
+  LogOutIcon,
+  MonitorSmartphoneIcon,
+  SmartphoneIcon,
+  TabletIcon,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import {
+  SettingsCard,
+  SettingsRow,
+  SettingsRowSkeleton,
+  StatusPill,
+} from "@/components/Settings";
+import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/contexts/Confirm";
+import { useSessions } from "@/hooks/useAccountData";
+import { authClient } from "@/lib/auth";
+import { formatDate, parseUserAgent } from "@/lib/utils";
+import type { TDeviceInfo } from "@/typings";
 
-import useSWR from "swr";
+const DEVICE_ICONS = {
+  mobile: SmartphoneIcon,
+  tablet: TabletIcon,
+  desktop: LaptopIcon,
+};
 
 export function DeviceSessions() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { setLoading } = useLoading();
-  const { capabilities } = useCapabilities();
-  const { data: currentSession } = authClient.useSession();
+  const confirm = useConfirm();
+  const { data: current } = authClient.useSession();
+  const { data: sessions, isLoading, mutate } = useSessions();
 
-  const { data } = useSWR(
-    "deviceSessions",
-    async () => await authClient.listSessions(),
-  );
+  const currentToken = current?.session.token;
+  const sorted = [...(sessions ?? [])].sort((a, b) => {
+    if (a.token === currentToken) return -1;
+    if (b.token === currentToken) return 1;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+  const otherCount = sorted.filter((s) => s.token !== currentToken).length;
 
-  const deviceSessions = React.useMemo(() => data?.data ?? [], [data?.data]);
-
-  const sessions = React.useMemo(() => {
-    return (deviceSessions ?? []).reduce<Record<string, typeof deviceSessions>>(
-      (acc, session) => {
-        const { os, deviceType } = parseUserAgent(session.userAgent ?? "");
-
-        const key = `${os}-${deviceType}`;
-
-        if (!acc[key]) {
-          acc[key] = [];
+  const revoke = (token: string, label: string) =>
+    confirm({
+      title: t("Sign out of this device?"),
+      description: t("{{device}} will need to sign in again.", {
+        device: label,
+      }),
+      confirmLabel: t("Sign out"),
+      destructive: true,
+      onConfirm: async () => {
+        const { error } = await authClient.revokeSession({ token });
+        if (error) {
+          toast.error(error.message);
+          return false;
         }
-
-        acc[key].push(session);
-
-        return acc;
+        await mutate();
       },
-      {},
-    );
-  }, [deviceSessions]);
+    });
 
-  if (!capabilities?.includes("multiSession")) return null;
+  const revokeOthers = () =>
+    confirm({
+      title: t("Sign out of all other devices?"),
+      description: t(
+        "Every device except this one will need to sign in again.",
+      ),
+      confirmLabel: t("Sign out everywhere else"),
+      destructive: true,
+      onConfirm: async () => {
+        const { error } = await authClient.revokeOtherSessions();
+        if (error) {
+          toast.error(error.message);
+          return false;
+        }
+        toast.success(t("Signed out of other devices"));
+        await mutate();
+      },
+    });
 
   return (
-    <>
-      {/* Device sessions */}
-      <div className="flex flex-col gap-2">
-        <h3 className="text-xl font-medium">{t("Your Devices")}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t("Where you're signed-in")}
-        </p>
-      </div>
+    <SettingsCard
+      title={t("Your devices")}
+      description={t("Where you're signed in right now.")}
+      action={
+        otherCount > 0 && (
+          <Button variant="outline" size="sm" onClick={revokeOthers}>
+            <LogOutIcon />
+            {t("Sign out everywhere else")}
+          </Button>
+        )
+      }
+    >
+      {isLoading ? (
+        <>
+          <SettingsRowSkeleton />
+          <SettingsRowSkeleton />
+        </>
+      ) : sorted.length === 0 ? (
+        <SettingsRow
+          icon={MonitorSmartphoneIcon}
+          title={t("No active sessions")}
+        />
+      ) : (
+        sorted.map((session) => {
+          const { browser, os, deviceType } = parseUserAgent(
+            session.userAgent ?? "",
+          );
+          const device = (session as typeof session & { device?: TDeviceInfo })
+            .device;
+          const isCurrent = session.token === currentToken;
+          const Icon = DEVICE_ICONS[deviceType];
 
-      <div className="flex flex-col gap-1 grow w-full h-full">
-        {deviceSessions.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia className="w-full">
-                <EmptyList />
-              </EmptyMedia>
-              <EmptyTitle>No Sessions!</EmptyTitle>
-              <EmptyDescription>
-                We didn't found any device session yet!
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <Accordion>
-            {Object.entries(sessions).map(([key, allSessions], idx) => {
-              const [os, deviceType] = key.split("-");
+          const name = device?.model
+            ? `${device.model}`
+            : [os, browser].filter((v) => v !== "Unknown").join(" · ") ||
+              t("Unknown device");
 
-              return (
-                <AccordionItem
-                  key={idx}
-                  value={key}
-                  className="group border-b-0!"
-                >
-                  <AccordionTrigger
-                    render={(props) => (
-                      <button
-                        {...props}
-                        className="cursor-pointer p-3 flex items-center justify-between gap-3 bg-card backdrop-blur-sm border/90 w-full group/accordion-trigger transition-all rounded-xs! group-first:rounded-t-lg! group-last:rounded-b-lg! mb-1"
-                      ></button>
-                    )}
+          const details = [
+            device?.model && browser !== "Unknown" ? browser : null,
+            session.ipAddress,
+            isCurrent
+              ? t("Active now")
+              : t("Last active {{time}}", {
+                  time: formatDate(session.updatedAt, "timeAgo"),
+                }),
+          ].filter(Boolean);
+
+          return (
+            <SettingsRow
+              key={session.id}
+              icon={Icon}
+              title={
+                <span className="flex flex-wrap items-center gap-2">
+                  {name}
+                  {isCurrent && (
+                    <StatusPill tone="primary">{t("This device")}</StatusPill>
+                  )}
+                </span>
+              }
+              description={details.join(" · ")}
+              action={
+                !isCurrent && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => revoke(session.token, name)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">
-                        {deviceType === "mobile" && "📱"}
-                        {deviceType === "tablet" && "📲"}
-                        {deviceType === "desktop" && "💻"}
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <h3>
-                          {t("{{count}} session on {{device}}", {
-                            count: allSessions.length,
-                            device: ["mobile", "tablet"].includes(deviceType)
-                              ? "phone"
-                              : "computer",
-                          })}
-                        </h3>
-                        <p>{os}</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-1!">
-                    {allSessions.map((session) => {
-                      const { deviceType, os, browser } = parseUserAgent(
-                        session.userAgent ?? "",
-                      );
-
-                      const device = (
-                        session as typeof session & {
-                          device: TDeviceInfo;
-                        }
-                      ).device;
-
-                      const isActive =
-                        currentSession?.session.token === session.token;
-
-                      return (
-                        <Item
-                          key={session.id}
-                          className="rounded-xs! group-last:rounded-lg!"
-                        >
-                          <div className="flex items-center gap-3 justify-start w-full">
-                            {/* left side */}
-                            <div className="flex flex-col">
-                              <h3 className="font-medium capitalize">
-                                {`${device?.model || os} • ${device?.platform || browser} ${device?.platformVersion ?? ""}`}
-                              </h3>
-
-                              <p className="text-sm text-muted-foreground capitalize">
-                                {device
-                                  ? device.mobile
-                                    ? "mobile"
-                                    : "desktop"
-                                  : deviceType}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="xs"
-                            onClick={() => {
-                              ActionSheetRef.current?.trigger(
-                                "confirmation",
-                                true,
-                                {
-                                  type: "normal",
-                                  onConfirm: async (dismiss) => {
-                                    setLoading(true);
-
-                                    const { error } =
-                                      await authClient.multiSession
-                                        .revoke({
-                                          sessionToken: session.token,
-                                        })
-                                        .finally(() => setLoading(false));
-
-                                    if (error) {
-                                      toast.error(error.message);
-                                      return;
-                                    }
-
-                                    dismiss();
-                                    if (isActive)
-                                      navigate("/login", {
-                                        viewTransition: true,
-                                      });
-                                  },
-                                },
-                              );
-                            }}
-                          >
-                            {t("Revoke")}
-                          </Button>
-                        </Item>
-                      );
-                    })}
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        )}
-
-        <div className="h-50"></div>
-      </div>
-    </>
+                    {t("Sign out")}
+                  </Button>
+                )
+              }
+            />
+          );
+        })
+      )}
+    </SettingsCard>
   );
 }

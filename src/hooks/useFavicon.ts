@@ -12,7 +12,7 @@ export function useFavicon(href?: string) {
       document.head.appendChild(link);
     }
 
-    // force reload
-    link.href = `${href}?v=${Date.now()}`;
+    link.removeAttribute("type");
+    link.href = href;
   }, [href]);
 }

@@ -1,19 +1,13 @@
+import { ArrowLeftIcon, MailCheckIcon } from "lucide-react";
+import React from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { Trans, useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import FormWrapper from "@/components/FormWrapper";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -21,84 +15,108 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
 import { isValidEmail, resolveURL } from "@/lib/utils";
 
-const DefaultForm = {
-  email: "",
-};
-
+/** Requests a password reset email. */
 function ResetPassword() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const [sentTo, setSentTo] = React.useState<string>();
 
-  const { register, handleSubmit, formState } = useForm<typeof DefaultForm>({
-    defaultValues: DefaultForm,
+  const { register, handleSubmit, formState } = useForm<{ email: string }>({
+    defaultValues: { email: searchParams.get("email") ?? "" },
   });
 
-  const onSubmit: SubmitHandler<typeof DefaultForm> = async (formData) => {
-    const { data, error } = await authClient.requestPasswordReset({
-      email: formData.email,
-      redirectTo: resolveURL("/change-password") + window.location.search,
+  const onSubmit: SubmitHandler<{ email: string }> = async ({ email }) => {
+    const { error } = await authClient.requestPasswordReset({
+      email,
+      redirectTo: resolveURL(
+        withSearch("/change-password", { omit: TRANSIENT_PARAMS }),
+      ),
     });
 
     if (error) {
       toast.error(error.message);
       return;
-    } else toast.success(t(data.message));
+    }
+
+    setSentTo(email);
   };
 
+  const backLink = (
+    <Link
+      to={withSearch("/login", { omit: TRANSIENT_PARAMS })}
+      viewTransition
+      className="inline-flex items-center gap-1.5 font-medium text-foreground underline-offset-4 hover:underline"
+    >
+      <ArrowLeftIcon className="size-4 rtl:rotate-180" />
+      {t("Back to sign in")}
+    </Link>
+  );
+
+  if (sentTo)
+    return (
+      <AuthLayout title={t("Reset password")} footer={backLink}>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <MailCheckIcon className="size-6" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-2xl font-semibold">{t("Check your inbox")}</h1>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "If an account exists for {{email}}, you'll get an email with a link to reset your password.",
+                { email: sentTo },
+              )}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSentTo(undefined)}
+          >
+            {t("Use a different email")}
+          </Button>
+        </div>
+      </AuthLayout>
+    );
+
   return (
-    <FormWrapper title={t("Reset password")}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">{t("Reset password")}</CardTitle>
-          <CardDescription>
-            {t("Enter your information below to submit the request")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  {...register("email", {
-                    validate: (value) =>
-                      isValidEmail(value)
-                        ? true
-                        : t("Please provide a valid email!"),
-                  })}
-                />
-                <FieldDescription>
-                  {t("We'll use this email to recover your account.")}
-                </FieldDescription>
+    <AuthLayout
+      title={t("Reset password")}
+      heading={t("Forgot your password?")}
+      description={t(
+        "Enter the email you use to sign in and we'll send you a reset link.",
+      )}
+      footer={backLink}
+    >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <FieldGroup className="gap-5">
+          <Field>
+            <FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              autoFocus
+              aria-invalid={!!formState.errors.email || undefined}
+              {...register("email", {
+                validate: (value) =>
+                  isValidEmail(value) || t("Please provide a valid email!"),
+              })}
+            />
+            <FieldError>{formState.errors.email?.message}</FieldError>
+          </Field>
 
-                <FieldError>{formState.errors.email?.message}</FieldError>
-              </Field>
-
-              <FieldGroup>
-                <Field>
-                  <Button type="submit">
-                    {formState.isSubmitting && <Spinner />}
-                    {t("Submit request")}
-                  </Button>
-                  <FieldDescription className="px-6 text-center">
-                    <Trans i18nKey={"goBackToSignIn"}>
-                      Go back to{" "}
-                      <Link to="/" viewTransition>
-                        Sign in
-                      </Link>
-                    </Trans>
-                  </FieldDescription>
-                </Field>
-              </FieldGroup>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </FormWrapper>
+          <Button type="submit" size="lg" disabled={formState.isSubmitting}>
+            {formState.isSubmitting && <Spinner />}
+            {t("Send reset link")}
+          </Button>
+        </FieldGroup>
+      </form>
+    </AuthLayout>
   );
 }
 

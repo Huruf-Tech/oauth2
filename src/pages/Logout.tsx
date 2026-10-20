@@ -1,36 +1,36 @@
 import React from "react";
-import { authClient } from "@/lib/auth";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { useLoading } from "@/contexts/Loading";
-import PoweredBy from "@/components/PoweredBy";
+import { BrandLogo } from "@/components/BrandLogo";
+import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth";
+import { getSafeRedirect, resolveURL } from "@/lib/utils";
 
 function Logout() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
 
-  const { setLoading } = useLoading();
-
   React.useEffect(() => {
-    setLoading(true);
-
     void (async () => {
       try {
         await authClient.signOut();
       } catch {
-        // Ignore errors
+        // Already signed out or offline: redirect regardless.
       }
-      window.location.href = redirect || import.meta.env.BASE_URL || "/";
+      window.location.replace(
+        getSafeRedirect(redirect) ?? resolveURL("/login"),
+      );
     })();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [redirect]);
 
   return (
-    <div className="w-full h-dvh flex justify-center items-center">
-      <div>
-        <p>Logging out..</p>
-        <br />
-        <PoweredBy />
+    <div className="flex min-h-svh flex-col items-center justify-center gap-5">
+      <title>{t("Signing out…")}</title>
+      <BrandLogo className="size-12 rounded-2xl" />
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner />
+        {t("Signing you out…")}
       </div>
     </div>
   );

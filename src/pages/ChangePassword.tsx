@@ -1,225 +1,145 @@
-import { CheckIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
-import React, { useId } from "react";
+import React from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import FormWrapper from "@/components/FormWrapper";
+import { PasswordInput } from "@/components/form/PasswordInput";
+import {
+  PasswordStrength,
+  validatePassword,
+} from "@/components/form/PasswordStrength";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
+import { StatusMessage } from "@/components/StatusMessage";
 import { authClient } from "@/lib/auth";
-import {
-  checkStrength,
-  cn,
-  getStrengthColor,
-  getStrengthText,
-} from "@/lib/utils";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
 
-const DefaultForm = {
-  password: "",
-  confirmPassword: "",
-};
+type TForm = { password: string; confirmPassword: string };
 
+/** Landing page of the password reset email: sets a new password. */
 function ChangePassword() {
-  const id = useId();
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+  // Better Auth redirects here with `?error=INVALID_TOKEN` for expired links.
+  const linkError = searchParams.get("error");
+  const [done, setDone] = React.useState(false);
 
-  const Location = useLocation();
-
-  const [searchParams] = useSearchParams(Location.search);
-
-  const [showPassword, setShowPassword] = React.useState(false);
-
-  const { register, handleSubmit, formState, watch } = useForm<
-    typeof DefaultForm
-  >({
-    defaultValues: DefaultForm,
+  const { register, handleSubmit, formState, watch } = useForm<TForm>({
+    defaultValues: { password: "", confirmPassword: "" },
   });
-
   const password = watch("password");
 
-  const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-    const token = searchParams.get("token");
-    if (token) {
-      const Response = await authClient.resetPassword({
-        newPassword: data.password,
-        token,
-      });
+  const onSubmit: SubmitHandler<TForm> = async (data) => {
+    const { error } = await authClient.resetPassword({
+      newPassword: data.password,
+      token: token!,
+    });
 
-      if (Response.error === null) navigate("/", { viewTransition: true });
-      else toast.error(Response.error.message);
-    } else
-      toast.error(
-        t("We didn't found the token. please request forgot password again!"),
-      );
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    setDone(true);
   };
 
-  const strength = checkStrength(password);
+  const loginLink = withSearch("/login", { omit: TRANSIENT_PARAMS });
 
-  const strengthScore = React.useMemo(() => {
-    return strength.filter((req) => req.met).length;
-  }, [strength]);
+  if (!token || linkError)
+    return (
+      <AuthLayout title={t("Reset password")}>
+        <StatusMessage
+          tone="error"
+          title={t("This link is invalid or has expired")}
+          description={t(
+            "Password reset links can only be used once and expire after a while. Request a new one to continue.",
+          )}
+          action={
+            <Button
+              size="lg"
+              render={
+                <Link
+                  to={withSearch("/reset-password", { omit: TRANSIENT_PARAMS })}
+                />
+              }
+            >
+              {t("Request a new link")}
+            </Button>
+          }
+        />
+      </AuthLayout>
+    );
+
+  if (done)
+    return (
+      <AuthLayout title={t("Password updated")}>
+        <StatusMessage
+          tone="success"
+          title={t("Password updated")}
+          description={t(
+            "Your password has been changed. You can now sign in with your new password.",
+          )}
+          action={
+            <Button size="lg" render={<Link to={loginLink} />}>
+              {t("Continue to sign in")}
+            </Button>
+          }
+        />
+      </AuthLayout>
+    );
 
   return (
-    <FormWrapper title={t("Change password")}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("Change password")}</CardTitle>
-          <CardDescription>
-            {t("Enter a secure & unique password")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="password">{t("Password")}</FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    {...register("password", {
-                      required: t("Password is required!"),
-                    })}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
-                    </Button>
-                  </InputGroupAddon>
-                </InputGroup>
+    <AuthLayout
+      title={t("Set a new password")}
+      heading={t("Set a new password")}
+      description={t("Choose a strong password you don't use anywhere else.")}
+    >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <FieldGroup className="gap-5">
+          <Field>
+            <FieldLabel htmlFor="password">{t("New password")}</FieldLabel>
+            <PasswordInput
+              id="password"
+              autoComplete="new-password"
+              autoFocus
+              aria-invalid={!!formState.errors.password || undefined}
+              {...register("password", { validate: validatePassword(t) })}
+            />
+            <FieldError>{formState.errors.password?.message}</FieldError>
+            <PasswordStrength password={password} />
+          </Field>
 
-                <FieldError>{formState.errors.password?.message}</FieldError>
-                <FieldDescription>
-                  {t("Must be at least 8 characters long.")}
-                </FieldDescription>
+          <Field>
+            <FieldLabel htmlFor="confirmPassword">
+              {t("Confirm password")}
+            </FieldLabel>
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              aria-invalid={!!formState.errors.confirmPassword || undefined}
+              {...register("confirmPassword", {
+                validate: (value) =>
+                  value === password || t("Passwords don't match"),
+              })}
+            />
+            <FieldError>{formState.errors.confirmPassword?.message}</FieldError>
+          </Field>
 
-                <div
-                  aria-label="Password strength"
-                  aria-valuemax={4}
-                  aria-valuemin={0}
-                  aria-valuenow={strengthScore}
-                  className="mt-3 mb-4 h-1 w-full overflow-hidden rounded-full bg-border"
-                  role="progressbar"
-                  tabIndex={-1}
-                >
-                  <div
-                    className={cn(
-                      `h-full transition-all duration-500 ease-out`,
-                      getStrengthColor(strengthScore),
-                    )}
-                    style={{ width: `${(strengthScore / 4) * 100}%` }}
-                  />
-                </div>
-                {/* Password strength description */}
-                <p
-                  className="mb-2 font-medium text-foreground text-sm"
-                  id={`${id}-description`}
-                >
-                  {getStrengthText(strengthScore)}. {t("Must contain:")}
-                </p>
-
-                {/* Password requirements list */}
-                <ul aria-label="Password requirements" className="space-y-1.5">
-                  {strength.map((req) => (
-                    <li className="flex items-center gap-2" key={req.text}>
-                      {req.met ? (
-                        <CheckIcon
-                          aria-hidden="true"
-                          className="text-emerald-500"
-                          size={16}
-                        />
-                      ) : (
-                        <XIcon
-                          aria-hidden="true"
-                          className="text-muted-foreground/80"
-                          size={16}
-                        />
-                      )}
-                      <span
-                        className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
-                      >
-                        {req.text}
-                        <span className="sr-only">
-                          {req.met
-                            ? " - Requirement met"
-                            : " - Requirement not met"}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="confirmPassword">
-                  {t("Confirm Password")}
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    {...register("confirmPassword", {
-                      validate: (val) =>
-                        val !== password
-                          ? t(
-                              "Confirm password should match with your password!",
-                            )
-                          : true,
-                    })}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
-                    </Button>
-                  </InputGroupAddon>
-                </InputGroup>
-
-                <FieldError>
-                  {formState.errors.confirmPassword?.message}
-                </FieldError>
-
-                <FieldDescription>
-                  {t("Please confirm your password.")}
-                </FieldDescription>
-              </Field>
-              <Button type="submit">
-                {formState.isSubmitting && <Spinner />}
-                {t("Change")}
-              </Button>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </FormWrapper>
+          <Button type="submit" size="lg" disabled={formState.isSubmitting}>
+            {formState.isSubmitting && <Spinner />}
+            {t("Update password")}
+          </Button>
+        </FieldGroup>
+      </form>
+    </AuthLayout>
   );
 }
 

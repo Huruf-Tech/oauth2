@@ -1,333 +1,228 @@
 import {
-  ArrowUpFromLine,
-  Calendar,
-  CheckCircle2,
-  ChevronLeftIcon,
-  Code,
-  Contact2,
-  HomeIcon,
-  ImageIcon,
-  Mail,
-  Shield,
-  ShieldCheck,
-  UserRound,
-  XCircle,
+  BadgeCheckIcon,
+  ChevronRightIcon,
+  FingerprintIcon,
+  MailWarningIcon,
+  MonitorSmartphoneIcon,
+  ShieldCheckIcon,
+  ShieldIcon,
+  UserRoundIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  TabBullets,
-  TabButton,
-  TabContent,
-  TabPanel,
-  Tabs,
-  TabsList,
-} from "@/components/Tabs";
+import { SettingsCard, SettingsRow, StatusPill } from "@/components/Settings";
+import { UserAvatar } from "@/components/UserAvatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePasskeys, useSessions } from "@/hooks/useAccountData";
+import { useAppBranding } from "@/hooks/useAppBranding";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { authClient } from "@/lib/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  formatDate,
-  getInitials,
-  handleUpload,
-  resolveURL,
-  transformImage,
-} from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import Item from "@/components/Item";
-import { Badge } from "@/components/ui/badge";
-import Security from "./Security";
-import { toast } from "sonner";
-import { useSearchParams } from "react-router";
-import { useLoading } from "@/contexts/Loading";
-import React from "react";
-import UpdateProfile from "./UpdateProfile";
-import { ActionSheetRef } from "@/registry/ActionSheet";
-import { Members } from "./Members";
-import { AvatarUpload } from "@/components/AvatarUpload";
-import { Developers } from "./Developers";
+import { features } from "@/lib/features";
+import { cn, formatDate } from "@/lib/utils";
 
-const tabs = [
-  { id: "home", icon: HomeIcon, label: "Home" },
-  { id: "personal", icon: Contact2, label: "Personal info" },
-  { id: "security", icon: Shield, label: "Security & Sign-in" },
-  {
-    id: "developers",
-    icon: Code,
-    label: "Developers",
-  },
-];
-
-function Home() {
+function Overview({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const { t } = useTranslation();
-  const { setLoading } = useLoading();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { appName } = useAppBranding();
+  const { has } = useCapabilities();
+  const { data: session } = authClient.useSession();
 
-  const { data, refetch } = authClient.useSession();
+  const { data: passkeys, isLoading: loadingPasskeys } = usePasskeys();
+  const { data: sessions } = useSessions();
 
-  const fullName = data?.user?.name || "Unnamed";
-  const verified = data?.user?.emailVerified;
-  const email = data?.user.email ?? "unknown";
+  if (!session) return null;
+  const { user } = session;
 
-  const defaultValue = React.useMemo(() => {
-    const search = searchParams.get("tab") || "home";
+  const checks = [
+    {
+      done: user.emailVerified,
+      label: t("Verify your email address"),
+      icon: MailWarningIcon,
+      tab: "personal",
+    },
+    has("2fa") && {
+      done: !!user.twoFactorEnabled,
+      label: t("Turn on 2-step verification"),
+      icon: ShieldIcon,
+      tab: "security",
+    },
+    has("passkey") && {
+      done: (passkeys?.length ?? 0) > 0,
+      label: t("Add a passkey for faster, phishing-resistant sign in"),
+      icon: FingerprintIcon,
+      tab: "security",
+      loading: loadingPasskeys,
+    },
+  ].filter(Boolean) as {
+    done: boolean;
+    label: string;
+    icon: typeof ShieldIcon;
+    tab: string;
+    loading?: boolean;
+  }[];
 
-    return search === "members" && !searchParams.get("tenant")
-      ? "home"
-      : search;
-  }, [searchParams]);
-
-  const returnUri = searchParams.get("returnUri");
+  const completed = checks.filter((c) => c.done).length;
+  const score = checks.length
+    ? Math.round((completed / checks.length) * 100)
+    : 100;
+  const pending = checks.filter((c) => !c.done && !c.loading);
 
   return (
-    <div className="w-full h-full">
-      <Tabs
-        defaultValue={defaultValue}
-        onValueChange={(tab) => {
-          const nextSearchParams = new URLSearchParams(window.location.search);
+    <>
+      {/* Profile hero */}
+      <section className="relative isolate overflow-hidden rounded-3xl border bg-card p-6 shadow-xs/5 sm:p-8">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 -z-1 h-28 bg-[radial-gradient(100%_100%_at_0%_0%,color-mix(in_oklch,var(--primary)_22%,transparent),transparent_70%)]"
+        />
+        <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+          <UserAvatar
+            size={76}
+            name={user.name}
+            email={user.email}
+            image={user.image}
+            className="ring-4 ring-card"
+          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-sm text-muted-foreground">{t("Welcome,")}</p>
+            <h1 className="truncate text-2xl font-semibold sm:text-3xl">
+              {user.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="truncate">{user.email}</span>
+              {user.emailVerified ? (
+                <StatusPill tone="success">
+                  <BadgeCheckIcon />
+                  {t("Verified")}
+                </StatusPill>
+              ) : (
+                <StatusPill tone="warning">{t("Unverified")}</StatusPill>
+              )}
+            </div>
+          </div>
+        </div>
+        <p className="mt-6 max-w-xl text-sm text-muted-foreground">
+          {t(
+            "Manage your info, privacy and security to make {{name}} work better for you.",
+            { name: appName },
+          )}
+        </p>
+      </section>
 
-          nextSearchParams.set("tab", tab);
-
-          setSearchParams(nextSearchParams);
-        }}
-      >
-        <TabsList
-          className="w-full max-w-fit mx-auto"
-          left={() =>
-            returnUri && (
-              <Button
-                variant={"secondary"}
-                size={"icon-sm"}
-                onClick={() => {
-                  window.location.href = returnUri;
-                }}
-              >
-                <ChevronLeftIcon />
-              </Button>
-            )
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        {/* Security checkup */}
+        <SettingsCard
+          title={t("Security checkup")}
+          description={
+            pending.length === 0
+              ? t("Your account is well protected.")
+              : t("{{count}} recommended actions", { count: pending.length })
           }
-          right={() => (
-            <Avatar
-              className={"size-10 border-3 border-primary/30 cursor-pointer"}
-              onClick={() =>
-                ActionSheetRef.current?.trigger("sessionSwitcher", true)
-              }
-            >
-              <AvatarImage src={transformImage(data?.user.image)} />
-              <AvatarFallback className="text-xl">
-                {getInitials(fullName)}
-              </AvatarFallback>
-            </Avatar>
-          )}
+          action={<ScoreRing value={score} />}
         >
-          {tabs.map((tab) => (
-            <TabButton key={tab.id} value={tab.id}>
-              <tab.icon /> {tab.label}
-            </TabButton>
+          {checks.map((check) => (
+            <SettingsRow
+              key={check.label}
+              icon={check.done ? ShieldCheckIcon : check.icon}
+              title={check.label}
+              description={check.done ? undefined : t("Recommended")}
+              onClick={check.done ? undefined : () => onNavigate(check.tab)}
+              className={cn(check.done && "opacity-70")}
+              action={
+                check.loading ? (
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                ) : check.done ? (
+                  <StatusPill tone="success">{t("Done")}</StatusPill>
+                ) : (
+                  <ChevronRightIcon className="size-4 text-muted-foreground rtl:rotate-180" />
+                )
+              }
+            />
           ))}
-        </TabsList>
+        </SettingsCard>
 
-        <TabPanel className="w-full h-[calc(100svh-60px)] pt-5">
-          <TabContent value={"home"} className="h-max">
-            <div className="flex flex-col gap-2 items-center justify-start pt-20 w-full max-w-lg mx-auto">
-              <Avatar className={"size-36 border"}>
-                <AvatarImage
-                  src={transformImage(data?.user.image, {
-                    width: 250,
-                    height: 250,
-                  })}
-                />
-                <AvatarFallback className="text-xl">
-                  {getInitials(fullName)}
-                </AvatarFallback>
-              </Avatar>
-
-              <h3 className="text-xl font-medium">{fullName}</h3>
-              <p>{data?.user?.email}</p>
-
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  setLoading(true);
-
-                  const { error } = await authClient
-                    .signOut()
-                    .finally(() => setLoading(false));
-
-                  if (error) {
-                    toast.error(error.message);
-                    return;
-                  }
-                }}
-              >
-                {t("Logout")}
-              </Button>
-            </div>
-          </TabContent>
-          <TabContent value={"personal"}>
-            <div className="flex flex-col gap-5 items-start w-full h-full px-3 max-w-lg mx-auto">
-              <div className="flex items-center justify-between gap-3 w-full">
-                <div className="flex flex-col">
-                  <h3 className="text-xl font-medium">{t("Personal info")}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {t("Manage details that make App work better for you")}
-                  </p>
-                </div>
-
-                <UpdateProfile />
-              </div>
-
-              {/* list */}
-              <div className="flex flex-col gap-1 grow w-full">
-                {[
-                  {
-                    icon: ImageIcon,
-                    label: "Profile picture",
-                    right: () => {
-                      const avatar = data?.user?.image;
-                      return (
-                        <div className="relative">
-                          <AvatarUpload
-                            id="avatar"
-                            showCancel={false}
-                            initialFile={
-                              avatar
-                                ? {
-                                    id: avatar,
-                                    type: "avatar",
-                                    name: avatar,
-                                    url: avatar,
-                                    size: 0,
-                                  }
-                                : undefined
-                            }
-                            onUpload={async ({ file }, signal) => {
-                              if (file instanceof File && data) {
-                                setLoading(true);
-                                const res = await handleUpload(file, {
-                                  path: [data.user.id, "avatar"],
-                                  signal,
-                                }).finally(() => setLoading(false));
-
-                                const { error } = await authClient.updateUser({
-                                  image: res.url,
-                                });
-
-                                if (error) {
-                                  toast.error(error.message);
-                                  return;
-                                }
-
-                                refetch();
-                              }
-                            }}
-                          />
-
-                          <label
-                            htmlFor="avatar"
-                            className="absolute right-0 bottom-0"
-                          >
-                            <Button
-                              size="icon-xs"
-                              className="pointer-events-none cursor-pointer"
-                            >
-                              <ArrowUpFromLine />
-                            </Button>
-                          </label>
-                        </div>
-                      );
-                    },
-                  },
-                  {
-                    icon: Contact2,
-                    label: "Name",
-                    content: fullName,
-                  },
-                  {
-                    icon: UserRound,
-                    label: "Gender",
-                    content: data?.user.gender ?? "N/A",
-                  },
-                  {
-                    icon: Calendar,
-                    label: "Date of Birth",
-                    content: formatDate(data?.user.dob, "PP"),
-                  },
-                  {
-                    icon: Mail,
-                    label: "Email",
-                    content: data?.user?.email,
-                  },
-                  {
-                    icon: ShieldCheck,
-                    label: "Email verified",
-                    content: (
-                      <Badge
-                        variant={verified ? "success" : "destructive"}
-                        className="max-w-fit"
-                      >
-                        {verified ? (
-                          <CheckCircle2 className="fill-success stroke-background" />
-                        ) : (
-                          <XCircle className="fill-destructive stroke-background" />
-                        )}
-                        {t(verified ? "Verified" : "Unverified")}
-                      </Badge>
-                    ),
-                    right: () =>
-                      !verified && (
-                        <Button
-                          onClick={async () => {
-                            setLoading(true);
-                            await authClient
-                              .sendVerificationEmail({
-                                email,
-                                callbackURL:
-                                  resolveURL() + window.location.search,
-                              })
-                              .finally(() => setLoading(false));
-                          }}
-                        >
-                          {t("Verify")}
-                        </Button>
-                      ),
-                  },
-                ].map((item, index) => (
-                  <Item key={index}>
-                    <div className="flex items-center gap-3">
-                      <item.icon />
-                      <div className="flex flex-col">
-                        <h3 className="font-medium">{t(item.label)}</h3>
-                        {typeof item.content === "string" ? (
-                          <p className="text-sm text-muted-foreground">
-                            {item.content}
-                          </p>
-                        ) : (
-                          item?.content
-                        )}
-                      </div>
-                    </div>
-
-                    {item.right?.()}
-                  </Item>
-                ))}
-              </div>
-            </div>
-          </TabContent>
-          <TabContent value={"security"}>
-            <Security />
-          </TabContent>
-          <TabContent value={"developers"}>
-            <Developers />
-          </TabContent>
-          {searchParams.get("tenant") && (
-            <TabContent value={"members"}>
-              <Members />
-            </TabContent>
+        {/* Shortcuts */}
+        <SettingsCard title={t("Quick links")}>
+          <SettingsRow
+            icon={UserRoundIcon}
+            title={t("Personal info")}
+            description={t("Name, photo and birthday")}
+            onClick={() => onNavigate("personal")}
+            action={
+              <ChevronRightIcon className="size-4 text-muted-foreground rtl:rotate-180" />
+            }
+          />
+          <SettingsRow
+            icon={ShieldIcon}
+            title={t("Security")}
+            description={t("Password, passkeys and 2-step verification")}
+            onClick={() => onNavigate("security")}
+            action={
+              <ChevronRightIcon className="size-4 text-muted-foreground rtl:rotate-180" />
+            }
+          />
+          {features.deviceSessions && (
+            <SettingsRow
+              icon={MonitorSmartphoneIcon}
+              title={t("Your devices")}
+              description={
+                sessions
+                  ? t("{{count}} active sessions", { count: sessions.length })
+                  : t("Where you're signed in")
+              }
+              onClick={() => onNavigate("security")}
+              action={
+                <ChevronRightIcon className="size-4 text-muted-foreground rtl:rotate-180" />
+              }
+            />
           )}
-        </TabPanel>
+        </SettingsCard>
+      </div>
 
-        <TabBullets />
-      </Tabs>
+      <p className="text-xs text-muted-foreground">
+        {t("Member since {{date}}", {
+          date: formatDate(user.createdAt, "MMMM yyyy"),
+        })}
+      </p>
+    </>
+  );
+}
+
+function ScoreRing({ value }: { value: number }) {
+  const radius = 18;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <div className="relative flex size-12 items-center justify-center">
+      <svg
+        viewBox="0 0 44 44"
+        className="absolute inset-0 -rotate-90"
+        aria-hidden
+      >
+        <circle
+          cx="22"
+          cy="22"
+          r={radius}
+          fill="none"
+          strokeWidth="4"
+          className="stroke-muted"
+        />
+        <circle
+          cx="22"
+          cy="22"
+          r={radius}
+          fill="none"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - value / 100)}
+          className={cn(
+            "transition-[stroke-dashoffset] duration-700",
+            value === 100 ? "stroke-success" : "stroke-primary",
+          )}
+        />
+      </svg>
+      <span className="text-xs font-semibold">{value}%</span>
     </div>
   );
 }
-export default Home;
+
+export default Overview;

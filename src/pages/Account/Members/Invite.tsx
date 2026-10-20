@@ -1,101 +1,108 @@
-import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth";
-import { BookCheck, CircleX } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate, Navigate } from "react-router";
-import useSWR from "swr";
+import { Link, Navigate, useParams } from "react-router";
 import { ThunderSDK } from "thunder-sdk";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { useAppBranding } from "@/hooks/useAppBranding";
+import { useCapabilities } from "@/hooks/useCapabilities";
+import { authClient } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/sdk";
+import { StatusMessage } from "@/components/StatusMessage";
 
-export const Invite = () => {
-  const { _id } = useParams<{ _id: string }>();
+type TState =
+  | { status: "joining" }
+  | { status: "joined" }
+  | { status: "failed"; message: string };
+
+/** Accepts a tenant invitation for the signed-in user. */
+function Invite() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-
+  const { _id } = useParams<{ _id: string }>();
+  const { app, appName } = useAppBranding();
+  const { has } = useCapabilities();
   const { data: session, isPending } = authClient.useSession();
+  const [state, setState] = React.useState<TState>({ status: "joining" });
+  const accepted = React.useRef(false);
 
-  const { data, isLoading } = useSWR(
-    "tenantMembers.create" + (session?.user.id ?? ""),
-    async () =>
-      session
-        ? await ThunderSDK.tenantMembers.create({
-            body: {
-              invite: _id!,
-            },
-          })
-        : null,
-  );
+  React.useEffect(() => {
+    if (!session || !_id || accepted.current) return;
+    // Accepting is not idempotent: guard against StrictMode double effects.
+    accepted.current = true;
 
-  if (!isPending && !session)
+    ThunderSDK.tenantMembers
+      .create({ body: { invite: _id }, axiosConfig: { silent: true } })
+      .then(() => setState({ status: "joined" }))
+      .catch((error) =>
+        setState({ status: "failed", message: getErrorMessage(error) }),
+      );
+  }, [session, _id]);
+
+  if (!isPending && !session) {
+    const back = encodeURIComponent(window.location.pathname);
     return (
       <Navigate
-        to={`/signup?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+        to={`${has("signup") ? "/signup" : "/login"}?redirect=${back}`}
+        replace
       />
     );
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-svh bg-muted/30 p-4">
-      <div className="bg-background border border-border/50 rounded-xl p-10 flex flex-col items-center gap-5 text-center max-w-sm w-full">
-        {isLoading ? (
-          <div className="flex flex-col gap-5 items-center justify-center h-full">
-            <h5>{t("joining...")}</h5>
-          </div>
-        ) : data?._id ? (
-          <>
-            <div className="h-10 w-10 rounded-full bg-primary flex flex-col justify-center items-center">
-              <BookCheck className="" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-medium">{t("You're in!")}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {t(
-                  "You've successfully joined the tenant. Head to the accounts section to get started.",
-                )}
-              </p>
-            </div>
-
-            <div className="flex gap-2 w-full">
+    <AuthLayout title={t("Join workspace")}>
+      {state.status === "joining" ? (
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <Spinner className="size-6" />
+          <p className="text-sm text-muted-foreground">
+            {t("Accepting your invitation…")}
+          </p>
+        </div>
+      ) : state.status === "joined" ? (
+        <StatusMessage
+          tone="success"
+          title={t("You're in!")}
+          description={t("You've joined the workspace on {{name}}.", {
+            name: appName,
+          })}
+          action={
+            <Button size="lg" render={<Link to="/account" replace />}>
+              {t("Go to your account")}
+            </Button>
+          }
+        />
+      ) : (
+        <StatusMessage
+          tone="error"
+          title={t("We couldn't add you")}
+          description={t(
+            "This invitation may have expired, been revoked, or been sent to a different email address.",
+          )}
+          action={
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground">{state.message}</p>
               <Button
-                className="flex-1"
-                onClick={() =>
-                  navigate("/", { replace: true, viewTransition: true })
-                }
+                size="lg"
+                variant="outline"
+                render={<Link to="/account" replace />}
               >
-                {t("Go to home")}
+                {t("Go to your account")}
               </Button>
+              {app?.supportEmail && (
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  render={<a href={`mailto:${app.supportEmail}`} />}
+                >
+                  {t("Contact support")}
+                </Button>
+              )}
             </div>
-          </>
-        ) : (
-          <>
-            <div className="h-10 w-10 rounded-full bg-destructive flex flex-col justify-center items-center">
-              <CircleX className="" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-medium">{t("Failed to join")}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {t(
-                  "We couldn't process your invitation. It may have expired or already been used.",
-                )}
-              </p>
-            </div>
-
-            <div className="flex gap-2 w-full">
-              <Button
-                className="flex-1"
-                onClick={() =>
-                  navigate("/", { replace: true, viewTransition: true })
-                }
-              >
-                {t("Go to home")}
-              </Button>
-              <Button variant="outline" className="flex-1">
-                <a href="mailto:support@yourapp.com">{t("Contact support")}</a>
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+          }
+        />
+      )}
+    </AuthLayout>
   );
-};
+}
+
+export default Invite;

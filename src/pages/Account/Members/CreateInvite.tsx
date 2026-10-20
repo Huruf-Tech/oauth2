@@ -1,69 +1,55 @@
-import { Controller, useForm } from "react-hook-form";
+import { SendIcon } from "lucide-react";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { ThunderSDK } from "thunder-sdk";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { Button } from "@/components/ui/button";
-import { useSearchParams } from "react-router";
-import { isValidEmail, resolveURL } from "@/lib/utils";
 import { useMyPolicies } from "@/hooks/useMyPolicies";
+import { tenantScope } from "@/lib/sdk";
+import { isValidEmail, resolveURL } from "@/lib/utils";
 
-const DefaultForm: Parameters<
-  typeof ThunderSDK.tenantInvites.create
->[number]["body"] = {
-  email: "",
-  role: "",
-  url: "",
-};
+type TInviteForm = { email: string; role: string };
 
-export const CreateInvite = ({ onSuccess }: { onSuccess?: () => void }) => {
+export function CreateInvite({
+  tenantId,
+  onSuccess,
+}: {
+  tenantId: string;
+  onSuccess?: () => void;
+}) {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const { myPolicies, isLoading } = useMyPolicies();
+  const { myPolicies, isLoading } = useMyPolicies(tenantId);
+  const roles = myPolicies?.subRoles ?? [];
 
-  const { control, register, handleSubmit, reset, formState } = useForm<
-    typeof DefaultForm
-  >({
-    defaultValues: DefaultForm,
-  });
+  const { control, register, handleSubmit, reset, formState } =
+    useForm<TInviteForm>({
+      defaultValues: { email: "", role: "" },
+    });
 
-  const onSubmit = async (formData: typeof DefaultForm) => {
+  const onSubmit: SubmitHandler<TInviteForm> = async ({ email, role }) => {
     try {
-      const { _id } = await ThunderSDK.tenantInvites.create({
+      await ThunderSDK.tenantInvites.create({
         body: {
-          email: formData.email,
-          role: formData.role,
+          email: email.trim(),
+          role,
+          // The server substitutes the invite id into this template.
           url: resolveURL("invite/{{_id}}"),
         },
-        axiosConfig: {
-          headers: {
-            "X-TENANT-ID": searchParams.get("tenant"),
-          },
-        },
+        ...tenantScope(tenantId),
       });
-
-      if (_id) {
-        reset(DefaultForm);
-        onSuccess?.();
-      }
+      toast.success(t("Invitation sent to {{email}}", { email }));
+      reset({ email: "", role });
+      onSuccess?.();
     } catch (error) {
       console.error(error);
     }
@@ -72,91 +58,61 @@ export const CreateInvite = ({ onSuccess }: { onSuccess?: () => void }) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full max-w-lg mx-auto px-3"
+      noValidate
+      className="flex flex-col gap-2 px-3 pt-1 pb-3"
     >
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="recipient" className="text-base">
-            {t("Invite Member")}
-          </FieldLabel>
-          <Field orientation={"vertical"}>
-            <InputGroup className="flex-1 grow">
-              <InputGroupInput
-                type="email"
-                placeholder={t("Email")}
-                {...register("email", {
-                  validate: (value) =>
-                    isValidEmail(value)
-                      ? true
-                      : t("Please provide a valid email!"),
-                })}
-              />
-
-              <InputGroupAddon align="inline-end">
-                <Controller
-                  name="role"
-                  control={control}
-                  rules={{
-                    required: t("Role is required"),
-                  }}
-                  render={({ field }) => (
-                    <Select
-                      id="role"
-                      items={(myPolicies?.subRoles ?? []).map((v) => ({
-                        label: v,
-                        value: v,
-                      }))}
-                      value={field.value ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                      disabled={isLoading} // disabling while fetching data
-                    >
-                      <SelectTrigger
-                        size="xs"
-                        className="w-full max-w-fit min-w-0 min-h-6"
-                      >
-                        <SelectValue
-                          placeholder={t("Select role")}
-                          className="capitalize md:text-inherit text-xs"
-                        />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectGroup>
-                          {(myPolicies?.subRoles ?? []).map((role, idx) => (
-                            <SelectItem
-                              key={idx}
-                              value={role}
-                              className="capitalize"
-                            >
-                              {role}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </InputGroupAddon>
-            </InputGroup>
-            <Field className="w-32">
-              <Button
-                type="submit"
-                size={"sm"}
-                disabled={formState.isSubmitting}
-              >
-                {formState.isSubmitting && <Spinner />}
-                {t("Send Invite")}
-              </Button>
-            </Field>
-          </Field>
-
-          <FieldError>
-            {formState.errors.email
-              ? formState.errors.email?.message
-              : formState.errors.role?.message}
-          </FieldError>
+      <FieldLabel htmlFor="invite-email" className="sr-only">
+        {t("Email")}
+      </FieldLabel>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Field className="flex-1">
+          <Input
+            id="invite-email"
+            type="email"
+            placeholder={t("teammate@company.com")}
+            aria-invalid={!!formState.errors.email || undefined}
+            {...register("email", {
+              validate: (value) =>
+                isValidEmail(value) || t("Please provide a valid email!"),
+            })}
+          />
         </Field>
-      </FieldGroup>
+        <Controller
+          name="role"
+          control={control}
+          rules={{ required: t("Choose a role") }}
+          render={({ field, fieldState }) => (
+            <Select
+              value={field.value || null}
+              onValueChange={(value) => field.onChange(value ?? "")}
+              disabled={isLoading}
+              items={roles.map((role) => ({ label: role, value: role }))}
+            >
+              <SelectTrigger
+                className="w-full capitalize sm:w-40"
+                aria-invalid={!!fieldState.error || undefined}
+                aria-label={t("Role")}
+              >
+                <SelectValue placeholder={t("Role")} />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map((role) => (
+                  <SelectItem key={role} value={role} className="capitalize">
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <Button type="submit" disabled={formState.isSubmitting}>
+          {formState.isSubmitting ? <Spinner /> : <SendIcon />}
+          {t("Invite")}
+        </Button>
+      </div>
+      <FieldError>
+        {formState.errors.email?.message ?? formState.errors.role?.message}
+      </FieldError>
     </form>
   );
-};
+}

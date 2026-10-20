@@ -1,33 +1,24 @@
-import React from "react";
-import { getAppBranding, type TAppBranding } from "@/lib/api";
+import useSWRImmutable from "swr/immutable";
+import { getAppBranding } from "@/lib/api";
 
-let appBrandingPromise: Promise<TAppBranding>;
+/** Shown only until branding loads, or if the backend sends no name. */
+export const DEFAULT_APP_NAME = "Huruf Tech";
 
+/**
+ * The project's branding (name, logo, colors, legal links) served by the
+ * backend at `/auth/branding`. Every brand surface in the UI reads from here.
+ */
 export function useAppBranding() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-  const [app, setApp] = React.useState<TAppBranding | null>(null);
-
-  React.useEffect(() => {
-    setIsLoading(true);
-    setError(null);
-
-    appBrandingPromise ??= getAppBranding();
-
-    void (async () => {
-      const app = await appBrandingPromise
-        .catch((error) => {
-          setError(error);
-        })
-        .finally(() => setIsLoading(false));
-
-      if (app?.name) setApp(app);
-    })();
-  }, []);
+  const { data, error, isLoading } = useSWRImmutable(
+    "app-branding",
+    getAppBranding,
+  );
+  const app = data?.name ? data : null;
 
   return {
     isLoading,
-    error,
+    error: (error as Error | undefined) ?? null,
     app,
+    appName: app?.name ?? DEFAULT_APP_NAME,
   };
 }

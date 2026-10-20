@@ -1,202 +1,241 @@
-import { useTranslation } from "react-i18next";
-import useSWR from "swr";
-import { ThunderSDK } from "thunder-sdk";
-import CreateClient from "./CreateClient";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials, transformImage } from "@/lib/utils";
-import Item from "@/components/Item";
-import { ArrowLeft, SquarePenIcon, Trash2Icon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Group, GroupSeparator } from "@/components/ui/group";
-import { Button } from "@/components/ui/button";
-import CopyToClipboard from "@/components/CopyToClipboard";
-import { SkeletonRepeater } from "@/components/SkeletonRepeater";
-import { Skeleton } from "@/components/ui/skeleton";
-import VirtualList from "@/components/VirutalList";
-import { useLoading } from "@/contexts/Loading";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { EmptyList } from "@/components/EmptyList";
+  AppWindowIcon,
+  EllipsisIcon,
+  KeyRoundIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { ThunderSDK } from "thunder-sdk";
+import CopyToClipboard from "@/components/CopyToClipboard";
+import { EmptyState } from "@/components/EmptyState";
+import {
+  SettingsCard,
+  SettingsRow,
+  SettingsRowSkeleton,
+  StatusPill,
+} from "@/components/Settings";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/contexts/Confirm";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { generateSecret, getInitials, transformImage } from "@/lib/utils";
+import { SecretDialog } from "../SecretDialog";
+import { ClientDialog, type TOAuthClient } from "./ClientDialog";
 
-function OAuth({ onBack }: { onBack?: () => void }) {
+function OAuthClients() {
   const { t } = useTranslation();
-  const { setLoading } = useLoading();
+  const confirm = useConfirm();
+  const [dialog, setDialog] = React.useState<{ client?: TOAuthClient } | null>(
+    null,
+  );
+  const [secret, setSecret] = React.useState<string | null>(null);
 
   const {
-    data,
-    isLoading: loadingClients,
-    isValidating,
+    items: clients,
+    isLoading,
+    hasMore,
+    isLoadingMore,
+    loadMore,
     mutate,
-  } = useSWR(
-    "oauth2Clients",
-    async () =>
-      await ThunderSDK.oauthClients.get({
-        params: {},
-        query: {},
-      }),
+  } = usePaginatedList(
+    ["oauthClients"],
+    async (query) => await ThunderSDK.oauthClients.get({ params: {}, query }),
   );
 
-  const authClients = data?.results ?? [];
+  const remove = (client: TOAuthClient) =>
+    confirm({
+      title: t("Delete {{name}}?", { name: client.name }),
+      description: t(
+        "Apps using this client will immediately stop being able to sign users in. This can't be undone.",
+      ),
+      confirmText: client.name,
+      confirmLabel: t("Delete app"),
+      destructive: true,
+      onConfirm: async () => {
+        await ThunderSDK.oauthClients.del({ params: { id: client._id } });
+        toast.success(t("App deleted"));
+        await mutate();
+      },
+    });
+
+  const rotateSecret = (client: TOAuthClient) =>
+    confirm({
+      title: t("Generate a new client secret?"),
+      description: t(
+        "The current secret stops working immediately. Update your server with the new one right away.",
+      ),
+      confirmLabel: t("Generate new secret"),
+      destructive: true,
+      onConfirm: async () => {
+        const next = generateSecret(48);
+        await ThunderSDK.oauthClients.update({
+          params: { id: client._id },
+          body: { secret: next },
+        });
+        setSecret(next);
+      },
+    });
+
+  const createButton = (
+    <Button size="sm" onClick={() => setDialog({})}>
+      <PlusIcon />
+      {t("New app")}
+    </Button>
+  );
 
   return (
-    <div className="flex flex-col gap-5 items-start w-full h-full">
-      <div className="flex items-center justify-between gap-3 w-full sticky top-0 z-10 px-3">
-        <div className="flex items-center gap-5 w-full">
-          <Button size="icon-sm" variant="outline" onClick={onBack}>
-            <ArrowLeft />
-          </Button>
-          <div className="flex flex-col">
-            <h3 className="text-xl font-medium">{t("OAuth2")}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t("Manage your oauth2 clients")}
-            </p>
-          </div>
-        </div>
-
-        <CreateClient onSuccess={mutate} />
-      </div>
-
-      {loadingClients || isValidating ? (
-        <SkeletonRepeater count={3} className="max-w-lg mx-auto px-3">
-          <OAuthClientCardSkeleton />
-        </SkeletonRepeater>
-      ) : authClients.length === 0 ? (
-        <Empty className="justify-start mt-10">
-          <EmptyHeader>
-            <EmptyMedia className="w-full">
-              <EmptyList />
-            </EmptyMedia>
-            <EmptyTitle>No Oauth Clients!</EmptyTitle>
-            <EmptyDescription>
-              You haven&apos;t created any oauth client yet. Get started by
-              creating your first oauth client.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : (
-        <VirtualList
-          config={{
-            count: authClients.length,
-            paddingEnd: 100,
-            estimateSize: () => 72,
-          }}
-        >
-          {(virtualizer, items) =>
-            items.map((virtualRow) => {
-              const item = authClients[virtualRow.index];
-              if (!item) return;
-
-              return (
-                <Item
-                  key={item._id}
-                  ref={virtualizer.measureElement}
-                  data-index={item._id}
-                  className={"item-start transition-all ease-in-out"}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="size-10 border">
-                        <AvatarImage
-                          src={transformImage(item.logo)}
-                          alt={item.name}
-                        />
-                        <AvatarFallback>
-                          {getInitials(item.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1">
-                        <h3 className="capitalize font-medium line-clamp-1">
-                          {item.name}
-                        </h3>
-                        <Badge
-                          variant={
-                            item.type === "confidential" ? "warning" : "info"
-                          }
-                          className="capitalize max-w-fit"
-                        >
-                          {t(item.type)}
-                        </Badge>
-                      </div>
-                      <CopyToClipboard text={item._id} />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col justify-between items-end gap-3">
-                    <Group aria-label="Client actions">
-                      <CreateClient
-                        data={item}
-                        render={
-                          <Button variant="outline" size="icon-sm">
-                            <SquarePenIcon />
-                          </Button>
-                        }
-                        onSuccess={mutate}
-                      />
-                      <GroupSeparator />
-                      <Button
-                        variant="destructive-outline"
-                        size="icon-sm"
-                        onClick={async () => {
-                          const el = document.querySelector(
-                            `[data-index="${item._id}"]`,
-                          );
-
-                          try {
-                            setLoading(true);
-                            el?.classList.add("opacity-30");
-
-                            await ThunderSDK.oauthClients.del({
-                              params: { id: item._id },
-                            });
-
-                            el?.classList.add(
-                              "animate-out",
-                              "fade-out",
-                              "slide-out-to-right-70",
-                              "duration-500",
-                            );
-
-                            authClients.filter((v) => v._id !== item._id);
-
-                            setTimeout(() => mutate(), 400);
-                          } catch (error) {
-                            console.error("error", error);
-                          } finally {
-                            setLoading(false);
-                          }
-                        }}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </Group>
-                  </div>
-                </Item>
-              );
-            })
-          }
-        </VirtualList>
+    <SettingsCard
+      title={t("OAuth apps")}
+      description={t(
+        "Applications that can sign users in with this account system.",
       )}
-    </div>
-  );
-}
-export default OAuth;
+      action={clients.length > 0 && createButton}
+    >
+      {isLoading ? (
+        <>
+          <SettingsRowSkeleton />
+          <SettingsRowSkeleton />
+        </>
+      ) : clients.length === 0 ? (
+        <div className="p-2">
+          <EmptyState
+            icon={AppWindowIcon}
+            title={t("No OAuth apps yet")}
+            description={t(
+              "Create an app to add “Sign in with your account” to your own products.",
+            )}
+            action={createButton}
+            className="py-8"
+          />
+        </div>
+      ) : (
+        <>
+          {clients.map((client) => (
+            <SettingsRow
+              key={client._id}
+              media={
+                <Avatar className="size-10 rounded-xl ring-1 ring-foreground/8">
+                  {client.logo && (
+                    <AvatarImage
+                      src={transformImage(client.logo)}
+                      alt={client.name}
+                    />
+                  )}
+                  <AvatarFallback className="rounded-[inherit] bg-muted text-xs font-semibold">
+                    {getInitials(client.name)}
+                  </AvatarFallback>
+                </Avatar>
+              }
+              title={
+                <span className="flex flex-wrap items-center gap-2">
+                  {client.name}
+                  <StatusPill
+                    tone={client.type === "confidential" ? "warning" : "info"}
+                  >
+                    {t(
+                      client.type === "confidential"
+                        ? "Confidential"
+                        : "Public",
+                    )}
+                  </StatusPill>
+                  {client.disabled && (
+                    <StatusPill tone="danger">{t("Disabled")}</StatusPill>
+                  )}
+                </span>
+              }
+              description={
+                <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <CopyToClipboard text={client._id} />
+                  <span className="text-xs">
+                    {t("{{count}} redirect URIs", {
+                      count: client.redirectUris?.length ?? 0,
+                    })}
+                  </span>
+                </span>
+              }
+              action={
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={t("Options")}
+                      />
+                    }
+                  >
+                    <EllipsisIcon />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => setDialog({ client })}>
+                      <PencilIcon />
+                      {t("Edit")}
+                    </DropdownMenuItem>
+                    {client.type === "confidential" && (
+                      <DropdownMenuItem onClick={() => rotateSecret(client)}>
+                        <KeyRoundIcon />
+                        {t("New client secret")}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => remove(client)}
+                    >
+                      <Trash2Icon />
+                      {t("Delete")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              }
+            />
+          ))}
+          {hasMore && (
+            <div className="flex justify-center p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore && <Spinner />}
+                {t("Load more")}
+              </Button>
+            </div>
+          )}
+        </>
+      )}
 
-function OAuthClientCardSkeleton() {
-  return (
-    <Item>
-      <Skeleton className="size-10 min-w-10 rounded-full" />
-      <div className="flex flex-1 flex-col">
-        <Skeleton className="my-0.5 h-4 max-w-30" />
-        <Skeleton className="h-4 max-w-20" />
-      </div>
-      <Skeleton className="h-7 w-14" />
-    </Item>
+      <ClientDialog
+        open={!!dialog}
+        client={dialog?.client}
+        onOpenChange={(open) => !open && setDialog(null)}
+        onSaved={(newSecret) => {
+          toast.success(dialog?.client ? t("App updated") : t("App created"));
+          void mutate();
+          if (newSecret) setSecret(newSecret);
+        }}
+      />
+
+      <SecretDialog
+        secret={secret}
+        title={t("Your client secret")}
+        onClose={() => setSecret(null)}
+      />
+    </SettingsCard>
   );
 }
+
+export default OAuthClients;

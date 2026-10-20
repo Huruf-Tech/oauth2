@@ -1,72 +1,176 @@
-/* eslint-disable react-hooks/immutability */
-import { Navigate, Outlet } from "react-router";
-import { authClient } from "@/lib/auth";
-import { Skeleton } from "@/components/ui/skeleton";
-import { SkeletonRepeater } from "@/components/SkeletonRepeater";
-import { useUpdateSession } from "@/hooks/useUpdateSession";
+import {
+  CodeIcon,
+  LayoutGridIcon,
+  ShieldIcon,
+  UserRoundIcon,
+  UsersIcon,
+} from "lucide-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useSearchParams } from "react-router";
+import { BrandLogo } from "@/components/BrandLogo";
+import {
+  AccountLayout,
+  type TNavItem,
+} from "@/components/layout/AccountLayout";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { useUpdateSession } from "@/hooks/useUpdateSession";
+import { apiOrigin } from "@/lib/api";
+import { authClient } from "@/lib/auth";
+import { features } from "@/lib/features";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
+import { getSafeRedirect } from "@/lib/utils";
+import { AccountMenu } from "./AccountMenu";
+import { Developers } from "./Developers";
+import Overview from "./Home";
+import { Members } from "./Members";
+import PersonalInfo from "./PersonalInfo";
+import Security from "./Security";
+
+/** Where a signed-in user must be sent instead of seeing the account page. */
+function usePendingRedirect() {
+  const [searchParams] = useSearchParams();
+
+  return React.useMemo(() => {
+    // Resume an OAuth authorization started by a third-party app.
+    if (searchParams.has("client_id"))
+      return (
+        new URL("/oauth/authorize", apiOrigin).toString() +
+        withSearch("", { omit: TRANSIENT_PARAMS })
+      );
+
+    return getSafeRedirect(searchParams.get("redirect"));
+    // Only evaluated on first render: navigating inside the account must not re-trigger it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
 
 function Account() {
   const { data, isPending } = authClient.useSession();
+  const pendingRedirect = usePendingRedirect();
+  // Guard against malformed payloads (e.g. an HTML fallback page served
+  // instead of the API) so they're treated as "signed out", not crash.
+  const session = data?.session?.id && data.user?.id ? data : null;
 
-  useUpdateSession();
+  React.useEffect(() => {
+    if (session && pendingRedirect) window.location.replace(pendingRedirect);
+  }, [session, pendingRedirect]);
 
-  const [query] = React.useState(new URLSearchParams(window.location.search));
+  if (isPending) return <AccountSkeleton />;
 
-  if (data && !isPending) {
-    if (query.has("client_id")) {
-      window.location.href =
-        new URL( //! Redirect to external auth url
-          "/oauth/authorize",
-          import.meta.env.VITE_API_ORIGIN || window.location.origin,
-        ).toString() + window.location.search;
+  if (!session)
+    return (
+      <Navigate to={withSearch("/login", { omit: TRANSIENT_PARAMS })} replace />
+    );
 
-      return;
-    } else if (query.has("redirect")) {
-      window.location.href = query.get("redirect")!;
-    }
-  }
+  if (pendingRedirect) return <Redirecting />;
 
-  if ((!data && !isPending) || query.has("token"))
-    return <Navigate to={"/login" + window.location.search} />;
-
-  if (isPending) return <SkeletonLoading />;
-
-  return <Outlet />;
+  return <AccountHome sessionId={session.session.id} />;
 }
 
-export default Account;
+function AccountHome({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tenant = searchParams.get("tenant");
 
-function SkeletonLoading() {
+  useUpdateSession(sessionId);
+
+  const items = React.useMemo<TNavItem[]>(
+    () => [
+      { id: "home", label: t("Overview"), icon: LayoutGridIcon },
+      { id: "personal", label: t("Personal info"), icon: UserRoundIcon },
+      { id: "security", label: t("Security"), icon: ShieldIcon },
+      ...(features.oauthApps || features.apiKeys
+        ? [{ id: "developers", label: t("Developers"), icon: CodeIcon }]
+        : []),
+      ...(tenant && features.members
+        ? [{ id: "members", label: t("Members"), icon: UsersIcon }]
+        : []),
+    ],
+    [t, tenant],
+  );
+
+  const requested = searchParams.get("tab") ?? "home";
+  const active = items.some((item) => item.id === requested)
+    ? requested
+    : "home";
+
+  const navigate = React.useCallback(
+    (tab: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("tab", tab);
+          next.delete("view");
+          return next;
+        },
+        { preventScrollReset: false },
+      );
+      window.scrollTo({ top: 0 });
+    },
+    [setSearchParams],
+  );
+
+  const sectionTitle = items.find((item) => item.id === active)?.label;
+
   return (
-    <div className="w-full bg-muted/5 dark:bg-muted/30 h-svh px-3">
-      <div className="p-2">
-        <div
-          className={
-            "relative flex p-2 gap-2 snap-x snap-mandatory max-w-fit mx-auto w-full overflow-hidden"
-          }
-          role="tablist"
-        >
-          <SkeletonRepeater count={6} className="gap-3 flex-row">
-            <Skeleton className="w-24 h-10 snap-start flex shrink-0 grow cursor-pointer items-center justify-center whitespace-nowrap transition-[color,background-color,box-shadow]" />
-          </SkeletonRepeater>
-        </div>
-      </div>
+    <AccountLayout
+      items={items}
+      active={active}
+      onNavigate={navigate}
+      returnUrl={getSafeRedirect(searchParams.get("returnUri"))}
+      menu={<AccountMenu />}
+    >
+      <title>{`${sectionTitle} · ${t("Account")}`}</title>
+      {active === "home" && <Overview onNavigate={navigate} />}
+      {active === "personal" && <PersonalInfo />}
+      {active === "security" && <Security />}
+      {active === "developers" && <Developers />}
+      {active === "members" && tenant && <Members tenantId={tenant} />}
+    </AccountLayout>
+  );
+}
 
-      <Skeleton className="w-full h-[calc(100%-12%)] max-w-2xl mx-auto" />
+function Redirecting() {
+  const { t } = useTranslation();
 
-      <div className="fixed bottom-5 left-0 right-0 max-w-fit rounded-full bg-background/50 backdrop-blur-sm p-2 flex items-center justify-center gap-1 mx-auto">
-        {Array.from({ length: 6 }, (_, i) => {
-          return (
-            <span
-              key={i}
-              className={
-                "w-2 h-2 rounded-full bg-muted-foreground/30 backdrop-blur-sm"
-              }
-            />
-          );
-        })}
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-5">
+      <title>{t("Redirecting…")}</title>
+      <BrandLogo className="size-12 rounded-2xl" />
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner />
+        {t("Taking you back to the app…")}
       </div>
     </div>
   );
 }
+
+function AccountSkeleton() {
+  return (
+    <div className="flex min-h-svh flex-col">
+      <div className="border-b">
+        <div className="mx-auto flex h-15 max-w-6xl items-center gap-3 px-4 sm:px-6">
+          <Skeleton className="size-8 rounded-lg" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="ms-auto size-8 rounded-full" />
+        </div>
+      </div>
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="hidden flex-col gap-2 md:flex">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-lg" />
+          ))}
+        </div>
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-44 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Account;

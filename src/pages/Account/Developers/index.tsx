@@ -1,126 +1,89 @@
-import Item from "@/components/Item";
-import { KeyRoundIcon } from "lucide-react";
-import React from "react";
+import { AppWindowIcon, KeyRoundIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import OAuth2 from "@/components/custom-icons/oauth2";
-import OAuth from "./Oauth";
+import { useSearchParams } from "react-router";
+import { SectionHeader } from "@/components/Settings";
+import { features } from "@/lib/features";
+import { cn } from "@/lib/utils";
 import { APIKeys } from "./API";
+import OAuthClients from "./Oauth";
+
+const VIEWS = [
+  {
+    id: "oauth",
+    label: "OAuth apps",
+    icon: AppWindowIcon,
+    enabled: features.oauthApps,
+  },
+  {
+    id: "api-keys",
+    label: "API keys",
+    icon: KeyRoundIcon,
+    enabled: features.apiKeys,
+  },
+].filter((view) => view.enabled);
 
 export function Developers() {
   const { t } = useTranslation();
-  const [page, setPage] = React.useState("1");
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const Developers = React.useMemo(
-    () => [
-      {
-        icon: OAuth2,
-        label: "OAuth",
-        value: "oauth",
-        orientation: "vertical",
-        content: t("Manage your oauth clients"),
-        onClick: () => setPage("2"),
-      },
-      {
-        icon: KeyRoundIcon,
-        label: "API Keys",
-        value: "apiKeys",
-        content: t("Manage your api keys"),
-        onClick: () => setPage("3"),
-      },
-    ],
-    [t],
-  );
+  const requested = searchParams.get("view");
+  const view = VIEWS.find((v) => v.id === requested)?.id ?? VIEWS[0]?.id;
+
+  if (!view) return null;
 
   return (
-    <div
-      className="w-full h-full px-3 max-w-lg mx-auto t-page-slide"
-      data-page={page}
-    >
-      <style>{`
-:root {
-  --page-slide-dur: 200ms;
-  --page-fade-dur: 200ms;
-  --page-slide-distance: 8px;
-  --page-blur: 3px;
-  --page-stagger: 0ms;
-  --page-exit-enabled: 1;
-  --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --page-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
+    <>
+      <SectionHeader
+        title={t("Developers")}
+        description={
+          VIEWS.length > 1
+            ? t("Build on top of your account with OAuth apps and API keys.")
+            : view === "oauth"
+              ? t("Let your own applications sign users in.")
+              : t("Call the API from your servers.")
+        }
+      />
 
-.t-page-slide {
-  position: relative;
-}
-.t-page-slide .t-page[data-page-id="1"] {
-  --t-page-from-x: calc(var(--page-slide-distance) * -1);
-}
-.t-page-slide .t-page[data-page-id="2"] {
-  --t-page-from-x: var(--page-slide-distance);
-}
-.t-page-slide .t-page[data-page-id="3"] {
-  --t-page-from-x: var(--page-slide-distance);
-}
-.t-page-slide .t-page {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(calc(var(--t-page-from-x, 0px) * var(--page-exit-enabled)));
-  filter: blur(calc(var(--page-blur) * var(--page-exit-enabled)));
-  transition:
-    opacity   var(--page-fade-dur)  var(--page-fade-ease),
-    transform var(--page-slide-dur) var(--page-slide-ease),
-    filter    var(--page-slide-dur) var(--page-slide-ease);
-  will-change: opacity, transform, filter;
-}
-.t-page-slide[data-page="1"] .t-page[data-page-id="1"],
-.t-page-slide[data-page="2"] .t-page[data-page-id="2"],
-.t-page-slide[data-page="3"] .t-page[data-page-id="3"] {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-  filter: blur(0);
-  transition-delay: var(--page-stagger);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .t-page-slide .t-page { transition: none !important; }
-}
-`}</style>
-      <section className="flex flex-col gap-5 t-page" data-page-id="1">
-        <div className="flex flex-col">
-          <h3 className="text-xl font-medium">{t("Developer & Tools")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("Manage your developer tools")}
-          </p>
-        </div>
-        {/* list */}
-        <div className="flex flex-col gap-1 w-full">
-          {Developers.map((item, index) => (
-            <Item key={index} onClick={item.onClick} className="cursor-pointer">
-              <div className="flex items-center gap-3">
-                <item.icon />
-                <div className="flex flex-col">
-                  <h3 className="font-medium">{t(item.label)}</h3>
-                  {typeof item.content === "string" ? (
-                    <p className="text-sm text-muted-foreground">
-                      {item.content}
-                    </p>
-                  ) : (
-                    item.content
-                  )}
-                </div>
-              </div>
-            </Item>
+      {VIEWS.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={t("Developer tools")}
+          className="inline-flex w-fit gap-1 rounded-xl border bg-muted/50 p-1"
+        >
+          {VIEWS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={view === item.id}
+              onClick={() =>
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("view", item.id);
+                  return next;
+                })
+              }
+              className={cn(
+                "inline-flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
+                view === item.id
+                  ? "bg-background text-foreground shadow-xs ring-1 ring-foreground/8"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <item.icon className="size-4" />
+              {t(item.label)}
+            </button>
           ))}
         </div>
-      </section>
-      <section className="t-page w-full" data-page-id="2">
-        {page === "2" && <OAuth onBack={() => setPage("1")} />}
-      </section>
-      <section className="t-page w-full" data-page-id="3">
-        {page === "3" && <APIKeys onBack={() => setPage("1")} />}
-      </section>
-    </div>
+      )}
+
+      <div
+        role="tabpanel"
+        key={view}
+        className="animate-in fade-in duration-300"
+      >
+        {view === "oauth" ? <OAuthClients /> : <APIKeys />}
+      </div>
+    </>
   );
 }
