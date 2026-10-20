@@ -13,19 +13,6 @@ import { applyThemeVars } from "./lib/utils";
 
 function App() {
   const [searchParams] = useSearchParams();
-<<<<<<< HEAD
-  const { app } = useAppBranding();
-
-  useFavicon(app?.icon ?? app?.logo);
-
-  const { scheme } = useColorScheme(searchParams.get("theme") as TScheme);
-  const { direction } = useLanguage(searchParams.get("lng"));
-
-  React.useEffect(() => {
-    if (app?.theme) applyThemeVars(app.theme);
-  }, [app]);
-=======
->>>>>>> 79c98d355216f470f83a41ed5010f6f22b58e2ef
 
   return (
     <SWRConfig

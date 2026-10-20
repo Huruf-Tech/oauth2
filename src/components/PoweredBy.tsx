@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+
 import HurufLogo from "@/assets/huruf-logo.png";
 import { useAppBranding } from "@/hooks/useAppBranding";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,10 @@ function PoweredBy({ className }: { className?: string }) {
   const { app, isLoading } = useAppBranding();
 
   if (isLoading || app?.hidePoweredBy) return null;
+
+  if (!app || app.hidePoweredBy) {
+    return null;
+  }
 
   return (
     <a

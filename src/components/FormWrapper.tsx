@@ -56,7 +56,7 @@ function FormWrapper({
 
         {loading ? <FormSkeleton /> : children}
 
-        <PoweredBy />
+        <PoweredBy app={app} />
       </div>
     </div>
   );

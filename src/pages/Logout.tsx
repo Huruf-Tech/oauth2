@@ -9,6 +9,7 @@ import { getSafeRedirect, resolveURL } from "@/lib/utils";
 function Logout() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+
   const redirect = searchParams.get("redirect");
 
   React.useEffect(() => {
