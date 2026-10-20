@@ -1,0 +1,1 @@
+import{Ct as e,Tt as t,gt as n}from"./useAppBranding-B2Dj4GNW.js";import{n as r,t as i}from"./navigation-0LDBsjD-.js";var a=t(e(),1);function o(){let e=n();return a.useCallback(()=>{e(r(`/account`,{omit:i}),{replace:!0,viewTransition:!0})},[e])}export{o as t};

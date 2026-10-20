@@ -24,17 +24,11 @@ const CANCELLED_CODES = new Set(["AUTH_CANCELLED", "ERROR_CEREMONY_ABORTED"]);
 
 function Login() {
   const { t } = useTranslation();
-<<<<<<< HEAD
-  const navigate = useNavigate();
-  const { setLoading } = useLoading();
-  const { app, error } = useAppBranding();
-=======
   const { appName } = useAppBranding();
   const { has, isLoading } = useCapabilities();
   const [searchParams] = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
   const providers = useEnabledProviders();
->>>>>>> 79c98d355216f470f83a41ed5010f6f22b58e2ef
 
   const emailEnabled = has("email");
   const magicLinkEnabled = has("magicLink");
