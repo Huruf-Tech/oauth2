@@ -1,19 +1,19 @@
 import React from "react";
-import { Outlet, useSearchParams } from "react-router";
+import { Outlet, useNavigation, useSearchParams } from "react-router";
 import { Toaster } from "sonner";
-import { ActionSheet } from "./components/ActionSheet";
+import { SWRConfig } from "swr";
 import { DirectionProvider } from "./components/ui/direction";
+import { ConfirmProvider } from "./contexts/Confirm";
+import { LoadingProvider, ProgressBar } from "./contexts/Loading";
+import { ThemeProvider, useTheme } from "./contexts/Theme";
 import { useAppBranding } from "./hooks/useAppBranding";
-import { type TScheme, useColorScheme } from "./hooks/useColorScheme";
 import { useFavicon } from "./hooks/useFavicon";
 import { useLanguage } from "./hooks/useLanguage";
 import { applyThemeVars } from "./lib/utils";
-import { ActionSheetRef } from "./registry/ActionSheet";
-import { LoadingProvider } from "./contexts/Loading";
-import { SWRConfig } from "swr";
 
 function App() {
   const [searchParams] = useSearchParams();
+<<<<<<< HEAD
   const { app } = useAppBranding();
 
   useFavicon(app?.icon ?? app?.logo);
@@ -24,6 +24,8 @@ function App() {
   React.useEffect(() => {
     if (app?.theme) applyThemeVars(app.theme);
   }, [app]);
+=======
+>>>>>>> 79c98d355216f470f83a41ed5010f6f22b58e2ef
 
   return (
     <SWRConfig
@@ -35,30 +37,53 @@ function App() {
         revalidateOnReconnect: true,
       }}
     >
-      <DirectionProvider direction={direction}>
-        <LoadingProvider>
-          <div className="isolate relative flex w-full h-full min-h-svh flex-col gap-5 bg-linear-to-t from-primary/10 to-transparent to-40%">
-            <Outlet />
-          </div>
-
-          <ActionSheet ref={ActionSheetRef} />
-
-          <Toaster
-            theme={scheme}
-            position="top-center"
-            toastOptions={{
-              className: "!items-start !gap-3 !rounded-2xl !p-3",
-              classNames: {
-                icon: "[&>svg]:!size-6 [&>svg]:mt-2",
-                title: "!text-base",
-                description: "!text-sm !text-muted-foreground",
-                actionButton: "!p-4 !h-6 !rounded-full capitalize",
-              },
-            }}
-          />
-        </LoadingProvider>
-      </DirectionProvider>
+      <ThemeProvider initial={searchParams.get("theme")}>
+        <Shell language={searchParams.get("lng")} />
+      </ThemeProvider>
     </SWRConfig>
   );
 }
+
+function Shell({ language }: { language: string | null }) {
+  const { app } = useAppBranding();
+  const { resolved } = useTheme();
+  const { direction } = useLanguage(language);
+  const navigation = useNavigation();
+
+  useFavicon(app?.icon ?? app?.logo);
+
+  React.useEffect(() => {
+    if (app?.theme) applyThemeVars(app.theme);
+  }, [app]);
+
+  return (
+    <DirectionProvider direction={direction}>
+      <LoadingProvider>
+        <ConfirmProvider>
+          {/* Shown while a lazy route chunk is loading */}
+          <ProgressBar isLoading={navigation.state === "loading"} />
+
+          <div className="relative isolate flex min-h-svh w-full flex-col">
+            <Outlet />
+          </div>
+
+          <Toaster
+            theme={resolved}
+            dir={direction}
+            position="top-center"
+            richColors
+            closeButton
+            toastOptions={{
+              classNames: {
+                toast: "!rounded-xl !shadow-lg/5 !font-sans",
+                description: "!text-muted-foreground",
+              },
+            }}
+          />
+        </ConfirmProvider>
+      </LoadingProvider>
+    </DirectionProvider>
+  );
+}
+
 export default App;

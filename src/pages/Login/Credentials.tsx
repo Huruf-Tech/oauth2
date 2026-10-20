@@ -1,9 +1,11 @@
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { MailWarningIcon } from "lucide-react";
 import React from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
+import { PasswordInput } from "@/components/form/PasswordInput";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -13,118 +15,93 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { authClient } from "@/lib/auth";
-import { isValidEmail } from "@/lib/utils";
 import { useOnLogin } from "@/hooks/useOnLogin";
+import { useResendVerification } from "@/hooks/useResendVerification";
+import { authClient } from "@/lib/auth";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
+import { isValidEmail } from "@/lib/utils";
 
-const DefaultForm = {
-  email: "",
-  password: "",
-  rememberMe: false,
+type TCredentials = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
 };
 
-function CredentialsForm({ onShowTwoStep }: { onShowTwoStep: () => void }) {
+function CredentialsForm({ onTwoFactor }: { onTwoFactor: () => void }) {
   const { t } = useTranslation();
-  const location = useLocation();
-  const triggerActionOnLogin = useOnLogin();
-  const [searchParams, setSearchParams] = useSearchParams(location.search);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const { control, register, handleSubmit, formState } = useForm<
-    typeof DefaultForm
-  >({
-    defaultValues: { ...DefaultForm, email: searchParams.get("email") ?? "" },
+  const onLogin = useOnLogin();
+  const [searchParams] = useSearchParams();
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState<string>();
+
+  const { control, register, handleSubmit, formState } = useForm<TCredentials>({
+    defaultValues: {
+      email: searchParams.get("email") ?? "",
+      password: "",
+      rememberMe: true,
+    },
   });
 
-  const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-    const Response = await authClient.signIn.email(
-      {
-        ...data,
-      },
-      {
-        async onSuccess(context) {
-          if (context.data.twoFactorRedirect) {
-            // Handle the 2FA verification in place
-            onShowTwoStep();
-          } else triggerActionOnLogin();
-        },
-        onError(ctx) {
-          if (ctx.error.status === 403) {
-            toast.error(t("Please verify your email address!"));
-          }
-        },
-      },
-    );
+  const onSubmit: SubmitHandler<TCredentials> = async (data) => {
+    setUnverifiedEmail(undefined);
 
-    if (Response.error) toast.error(Response.error.message);
+    const { data: result, error } = await authClient.signIn.email(data);
+
+    if (error) {
+      if (error.status === 403) setUnverifiedEmail(data.email);
+      else toast.error(error.message ?? t("Invalid email or password"));
+      return;
+    }
+
+    if ((result as { twoFactorRedirect?: boolean }).twoFactorRedirect)
+      onTwoFactor();
+    else onLogin();
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <FieldGroup>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <FieldGroup className="gap-5">
+        {unverifiedEmail && <VerifyEmailNotice email={unverifiedEmail} />}
+
         <Field>
           <FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
-          <Controller
-            name="email"
-            control={control}
-            rules={{
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="username webauthn"
+            aria-invalid={!!formState.errors.email || undefined}
+            {...register("email", {
               validate: (value) =>
-                isValidEmail(value) ? true : t("Please provide a valid email!"),
-            }}
-            render={({ field }) => (
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                autoComplete="email webauthn"
-                value={field.value}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // set email to url as well
-                  searchParams.set("email", value);
-                  setSearchParams(searchParams, { replace: true });
-                  // update the form value
-                  field.onChange(value);
-                }}
-              />
-            )}
+                isValidEmail(value) || t("Please provide a valid email!"),
+            })}
           />
-
           <FieldError>{formState.errors.email?.message}</FieldError>
         </Field>
+
         <Field>
           <div className="flex items-center justify-between">
             <FieldLabel htmlFor="password">{t("Password")}</FieldLabel>
-            <Link to="/reset-password" viewTransition>
-              {t("Forgot your password?")}
+            <Link
+              to={withSearch("/reset-password", { omit: TRANSIENT_PARAMS })}
+              viewTransition
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              {t("Forgot password?")}
             </Link>
           </div>
-          <InputGroup>
-            <InputGroupInput
-              id="password"
-              autoComplete="current-password webauthn"
-              type={showPassword ? "text" : "password"}
-              {...register("password", {
-                required: t("Password is required!"),
-              })}
-            />
-            <InputGroupAddon align="inline-end">
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
-              </Button>
-            </InputGroupAddon>
-          </InputGroup>
+          <PasswordInput
+            id="password"
+            autoComplete="current-password webauthn"
+            aria-invalid={!!formState.errors.password || undefined}
+            {...register("password", {
+              required: t("Password is required!"),
+            })}
+          />
+          <FieldError>{formState.errors.password?.message}</FieldError>
         </Field>
+
         <Controller
           name="rememberMe"
           control={control}
@@ -135,16 +112,48 @@ function CredentialsForm({ onShowTwoStep }: { onShowTwoStep: () => void }) {
                 checked={field.value}
                 onCheckedChange={field.onChange}
               />
-              <Label htmlFor="rememberMe">{t("Remember me")}</Label>
+              <Label htmlFor="rememberMe" className="font-normal">
+                {t("Keep me signed in")}
+              </Label>
             </Field>
           )}
         />
-        <Button type="submit">
+
+        <Button type="submit" size="lg" disabled={formState.isSubmitting}>
           {formState.isSubmitting && <Spinner />}
-          {t("Login")}
+          {t("Sign in")}
         </Button>
       </FieldGroup>
     </form>
+  );
+}
+
+function VerifyEmailNotice({ email }: { email: string }) {
+  const { t } = useTranslation();
+  const { state, resend } = useResendVerification();
+
+  return (
+    <Alert variant="warning">
+      <MailWarningIcon />
+      <AlertTitle>{t("Verify your email to continue")}</AlertTitle>
+      <AlertDescription>
+        {state === "sent"
+          ? t("We sent a new verification link to {{email}}.", { email })
+          : t("Check your inbox for the verification link.")}
+        {state !== "sent" && (
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-foreground"
+            onClick={() => resend(email)}
+            disabled={state === "sending"}
+          >
+            {state === "sending" && <Spinner />}
+            {t("Resend verification email")}
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
   );
 }
 

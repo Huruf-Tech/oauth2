@@ -1,284 +1,250 @@
-import { CheckIcon, EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
-import React, { useId } from "react";
+import { MailCheckIcon } from "lucide-react";
+import React from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { Trans, useTranslation } from "react-i18next";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { toast } from "sonner";
-import FormWrapper from "@/components/FormWrapper";
+import { PasswordInput } from "@/components/form/PasswordInput";
+import {
+  PasswordStrength,
+  validatePassword,
+} from "@/components/form/PasswordStrength";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
+import { useAppBranding } from "@/hooks/useAppBranding";
+import { useCapabilities } from "@/hooks/useCapabilities";
+import { useOnLogin } from "@/hooks/useOnLogin";
+import { useResendVerification } from "@/hooks/useResendVerification";
 import { authClient } from "@/lib/auth";
-import {
-  checkStrength,
-  cn,
-  getStrengthColor,
-  getStrengthText,
-  isValidEmail,
-} from "@/lib/utils";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
+import { isValidEmail, resolveURL } from "@/lib/utils";
+import { SocialButtons, useEnabledProviders } from "./Login/SocialButtons";
 
-const DefaultForm = {
-  fname: "",
-  lname: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
+type TSignupForm = {
+  fname: string;
+  lname: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 };
 
 function Signup() {
-  const id = useId();
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { appName } = useAppBranding();
+  const { has, isLoading } = useCapabilities();
+  const providers = useEnabledProviders();
+  const onLogin = useOnLogin();
+  const [pendingVerification, setPendingVerification] =
+    React.useState<string>();
 
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect");
-
-  const [showPassword, setShowPassword] = React.useState(false);
-
-  const { register, handleSubmit, formState, watch } = useForm<
-    typeof DefaultForm
-  >({
-    defaultValues: DefaultForm,
+  const { register, handleSubmit, formState, watch } = useForm<TSignupForm>({
+    defaultValues: {
+      fname: "",
+      lname: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const password = watch("password");
 
-  const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-    const { error } = await authClient.signUp.email({
-      name: [data.fname, data?.lname].filter(Boolean).join(" "),
+  const onSubmit: SubmitHandler<TSignupForm> = async (data) => {
+    const { data: result, error } = await authClient.signUp.email({
+      name: [data.fname, data.lname]
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(" "),
       email: data.email,
       password: data.password,
+      callbackURL: resolveURL(
+        withSearch("/account", { omit: TRANSIENT_PARAMS }),
+      ),
     });
 
-    if (!error) {
-      // handling invite case
-      if (redirect) window.open(redirect, "_self");
-      else navigate("/", { viewTransition: true });
-    } else toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    // No session token means the server requires email verification first.
+    if (!result?.token) setPendingVerification(data.email);
+    else onLogin();
   };
 
-  const strength = checkStrength(password);
+  const signInLink = (
+    <>
+      {t("Already have an account?")}{" "}
+      <Link
+        to={withSearch("/login", { omit: TRANSIENT_PARAMS })}
+        viewTransition
+        className="font-medium text-foreground underline-offset-4 hover:underline"
+      >
+        {t("Sign in")}
+      </Link>
+    </>
+  );
 
-  const strengthScore = React.useMemo(() => {
-    return strength.filter((req) => req.met).length;
-  }, [strength]);
+  if (pendingVerification)
+    return (
+      <AuthLayout title={t("Verify your email")} footer={signInLink}>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <MailCheckIcon className="size-6" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-2xl font-semibold">{t("Check your inbox")}</h1>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "We sent a verification link to {{email}}. Open it to activate your account.",
+                { email: pendingVerification },
+              )}
+            </p>
+          </div>
+          <ResendVerification email={pendingVerification} />
+        </div>
+      </AuthLayout>
+    );
+
+  if (!isLoading && !has("signup"))
+    return (
+      <AuthLayout
+        title={t("Sign up")}
+        heading={t("Sign up is disabled")}
+        description={t(
+          "New accounts can't be created for {{name}} right now. Ask an administrator for an invitation.",
+          { name: appName },
+        )}
+        footer={signInLink}
+      >
+        {null}
+      </AuthLayout>
+    );
 
   return (
-    <FormWrapper title={t("Signup")}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("Create an account")}</CardTitle>
-          <CardDescription>
-            {t("Enter your information below to create your account")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup>
-              <Field orientation={"horizontal"}>
+    <AuthLayout
+      title={t("Create account")}
+      heading={t("Create your account")}
+      description={t("Get started with {{name}} in less than a minute.", {
+        name: appName,
+      })}
+      footer={signInLink}
+    >
+      <div className="flex flex-col gap-5">
+        <SocialButtons mode="signup" />
+        {providers.length > 0 && has("email") && (
+          <FieldSeparator>{t("or")}</FieldSeparator>
+        )}
+
+        {has("email") && (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FieldGroup className="gap-5">
+              <div className="grid grid-cols-2 gap-3">
                 <Field>
-                  <FieldLabel htmlFor="fname">{t("First Name")}</FieldLabel>
+                  <FieldLabel htmlFor="fname">{t("First name")}</FieldLabel>
                   <Input
                     id="fname"
-                    type="text"
-                    placeholder="John"
+                    autoComplete="given-name"
+                    placeholder="Jane"
+                    aria-invalid={!!formState.errors.fname || undefined}
                     {...register("fname", {
-                      required: t("First name is required!"),
+                      validate: (value) =>
+                        !!value.trim() || t("First name is required!"),
                     })}
                   />
-
                   <FieldError>{formState.errors.fname?.message}</FieldError>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="lname">{t("Last Name")}</FieldLabel>
+                  <FieldLabel htmlFor="lname">{t("Last name")}</FieldLabel>
                   <Input
                     id="lname"
-                    type="text"
+                    autoComplete="family-name"
                     placeholder="Doe"
                     {...register("lname")}
                   />
                 </Field>
-              </Field>
+              </div>
+
               <Field>
                 <FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={!!formState.errors.email || undefined}
                   {...register("email", {
                     validate: (value) =>
-                      isValidEmail(value)
-                        ? true
-                        : t("Please provide a valid email!"),
+                      isValidEmail(value) || t("Please provide a valid email!"),
                   })}
                 />
-                <FieldDescription>
-                  {t(
-                    "We'll use this to contact you. We will not share your email with anyone else.",
-                  )}
-                </FieldDescription>
-
                 <FieldError>{formState.errors.email?.message}</FieldError>
               </Field>
+
               <Field>
                 <FieldLabel htmlFor="password">{t("Password")}</FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    {...register("password", {
-                      required: t("Password is required!"),
-                    })}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
-                    </Button>
-                  </InputGroupAddon>
-                </InputGroup>
-
+                <PasswordInput
+                  id="password"
+                  autoComplete="new-password"
+                  aria-invalid={!!formState.errors.password || undefined}
+                  {...register("password", { validate: validatePassword(t) })}
+                />
                 <FieldError>{formState.errors.password?.message}</FieldError>
-                <FieldDescription>
-                  {t("Must be at least 8 characters long.")}
-                </FieldDescription>
-
-                <div
-                  aria-label="Password strength"
-                  aria-valuemax={4}
-                  aria-valuemin={0}
-                  aria-valuenow={strengthScore}
-                  className="mt-3 mb-4 h-1 w-full overflow-hidden rounded-full bg-border"
-                  role="progressbar"
-                  tabIndex={-1}
-                >
-                  <div
-                    className={cn(
-                      `h-full transition-all duration-500 ease-out`,
-                      getStrengthColor(strengthScore),
-                    )}
-                    style={{ width: `${(strengthScore / 4) * 100}%` }}
-                  />
-                </div>
-                {/* Password strength description */}
-                <p
-                  className="mb-2 font-medium text-foreground text-sm"
-                  id={`${id}-description`}
-                >
-                  {getStrengthText(strengthScore)}. {t("Must contain:")}
-                </p>
-
-                {/* Password requirements list */}
-                <ul aria-label="Password requirements" className="space-y-1.5">
-                  {strength.map((req) => (
-                    <li className="flex items-center gap-2" key={req.text}>
-                      {req.met ? (
-                        <CheckIcon
-                          aria-hidden="true"
-                          className="text-emerald-500"
-                          size={16}
-                        />
-                      ) : (
-                        <XIcon
-                          aria-hidden="true"
-                          className="text-muted-foreground/80"
-                          size={16}
-                        />
-                      )}
-                      <span
-                        className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
-                      >
-                        {req.text}
-                        <span className="sr-only">
-                          {req.met
-                            ? " - Requirement met"
-                            : " - Requirement not met"}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <PasswordStrength password={password} />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="confirmPassword">
-                  {t("Confirm Password")}
+                  {t("Confirm password")}
                 </FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    {...register("confirmPassword", {
-                      validate: (val) =>
-                        val !== password
-                          ? t(
-                              "Confirm password should match with your password!",
-                            )
-                          : true,
-                    })}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
-                    </Button>
-                  </InputGroupAddon>
-                </InputGroup>
-
+                <PasswordInput
+                  id="confirmPassword"
+                  autoComplete="new-password"
+                  aria-invalid={!!formState.errors.confirmPassword || undefined}
+                  {...register("confirmPassword", {
+                    validate: (value) =>
+                      value === password || t("Passwords don't match"),
+                  })}
+                />
                 <FieldError>
                   {formState.errors.confirmPassword?.message}
                 </FieldError>
-
-                <FieldDescription>
-                  {t("Please confirm your password.")}
-                </FieldDescription>
               </Field>
-              <FieldGroup>
-                <Field>
-                  <Button type="submit">
-                    {formState.isSubmitting && <Spinner />}
-                    {t("Create Account")}
-                  </Button>
-                  <FieldDescription className="px-6 text-center">
-                    <Trans i18nKey={"accountExist"}>
-                      Already have an account?{" "}
-                      <Link to="/" viewTransition>
-                        Sign in
-                      </Link>
-                    </Trans>
-                  </FieldDescription>
-                </Field>
-              </FieldGroup>
+
+              <Button type="submit" size="lg" disabled={formState.isSubmitting}>
+                {formState.isSubmitting && <Spinner />}
+                {t("Create account")}
+              </Button>
             </FieldGroup>
           </form>
-        </CardContent>
-      </Card>
-    </FormWrapper>
+        )}
+      </div>
+    </AuthLayout>
+  );
+}
+
+function ResendVerification({ email }: { email: string }) {
+  const { t } = useTranslation();
+  const { state, resend } = useResendVerification();
+
+  return (
+    <Button
+      variant="outline"
+      onClick={() => resend(email)}
+      disabled={state !== "idle"}
+    >
+      {state === "sending" && <Spinner />}
+      {state === "sent" ? t("Email sent") : t("Resend email")}
+    </Button>
   );
 }
 

@@ -16,69 +16,37 @@ export function useLoading() {
   return context;
 }
 
-export function LoadingProvider({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const [isLoading, setIsLoading] = useState(false);
-
-  return (
-    <LoadingContext.Provider value={{ isLoading, setLoading: setIsLoading }}>
-      <div
-        className={cn(
-          "fixed w-full z-999999999999999",
-          isLoading ? "visible" : "invisible",
-        )}
-      >
-        <div className={`relative w-full h-1.25 overflow-hidden ${className}`}>
-          <div className="absolute inset-0 bg-primary animate-[slide_2s_ease-in-out_infinite_alternate]" />
-          <style>{`
-            @keyframes slide {
-              0% {
-                transform: translateX(-80%);
-              }
-              100% {
-                transform: translateX(80%);
-              }
-            }
-          `}</style>
-        </div>
-      </div>
-      {children}
-    </LoadingContext.Provider>
-  );
-}
-
-export const ProgressLoading = ({
+/** Thin indeterminate progress bar pinned to the top of the viewport. */
+export function ProgressBar({
   isLoading,
   className,
 }: {
   isLoading: boolean;
   className?: string;
-}) => {
+}) {
   return (
     <div
+      role="progressbar"
+      aria-hidden={!isLoading}
+      aria-busy={isLoading}
       className={cn(
-        "fixed w-full z-999999999999999",
-        isLoading ? "visible" : "invisible",
+        "pointer-events-none fixed inset-x-0 top-0 z-100 h-0.5 overflow-hidden transition-opacity duration-300",
+        isLoading ? "opacity-100" : "opacity-0",
+        className,
       )}
     >
-      <div className={`relative w-full h-1.25 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 bg-primary animate-[slide_2s_ease-in-out_infinite_alternate]" />
-        <style>{`
-            @keyframes slide {
-              0% {
-                transform: translateX(-80%);
-              }
-              100% {
-                transform: translateX(80%);
-              }
-            }
-          `}</style>
-      </div>
+      <div className="h-full w-full origin-left animate-progress bg-primary" />
     </div>
   );
-};
+}
+
+export function LoadingProvider({ children }: { children: React.ReactNode }) {
+  const [isLoading, setLoading] = useState(false);
+
+  return (
+    <LoadingContext.Provider value={{ isLoading, setLoading }}>
+      <ProgressBar isLoading={isLoading} />
+      {children}
+    </LoadingContext.Provider>
+  );
+}

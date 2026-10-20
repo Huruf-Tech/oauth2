@@ -1,5 +1,9 @@
-export const apiOrigin = import.meta.env.VITE_API_ORIGIN ||
-  window.location.origin;
+/**
+ * Origin of the Thunder backend. An empty `VITE_API_ORIGIN` (production) means
+ * the app is served from the same origin as the API.
+ */
+export const apiOrigin =
+  import.meta.env.VITE_API_ORIGIN || window.location.origin;
 
 export type TAppBranding = {
   name: string;
@@ -9,15 +13,23 @@ export type TAppBranding = {
   homepageURL?: string;
   termsURL?: string;
   privacyURL?: string;
-  theme?: Record<string, string>;
+  supportEmail?: string;
+  hidePoweredBy?: boolean;
+  theme?: Record<`--${string}`, string>;
 };
 
-export const getAppBranding = async (): Promise<TAppBranding> => {
-  const url = new URL(`/auth/branding/`, apiOrigin);
+/** Capability flags the backend can enable for this deployment. */
+export type TCapability =
+  | "signup"
+  | "email"
+  | "passkey"
+  | "2fa"
+  | "magicLink"
+  | "multiSession"
+  | (string & {});
 
-  const res = await fetch(url, {
-    method: "get",
-  });
+async function getJSON<T>(path: string): Promise<T> {
+  const res = await fetch(new URL(path, apiOrigin), { method: "GET" });
 
   if (!res.ok) {
     throw new Error(
@@ -25,25 +37,11 @@ export const getAppBranding = async (): Promise<TAppBranding> => {
     );
   }
 
-  const data = await res.json();
+  return (await res.json()) as T;
+}
 
-  return data as TAppBranding;
-};
+export const getAppBranding = () => getJSON<TAppBranding>("/auth/branding/");
 
-export const getAuthCapabilities = async (): Promise<string[]> => {
-  const url = new URL(`/auth/api/capabilities`, apiOrigin);
-
-  const res = await fetch(url, {
-    method: "get",
-  });
-
-  if (!res.ok) {
-    throw new Error(
-      (await res.text()) || `Request failed with status ${res.status}`,
-    );
-  }
-
-  const data = await res.json();
-
-  return (data as { capabilities: string[] }).capabilities;
-};
+export const getAuthCapabilities = async () =>
+  (await getJSON<{ capabilities: TCapability[] }>("/auth/api/capabilities"))
+    .capabilities;

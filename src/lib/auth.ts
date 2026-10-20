@@ -7,20 +7,11 @@ import {
   twoFactorClient,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-
-const baseClientOpts = {
-  baseURL: import.meta.env.VITE_API_ORIGIN ?? window.location.origin,
-  basePath: "/auth/api",
-};
+import { apiOrigin } from "./api";
 
 export const authClient = createAuthClient({
-  ...baseClientOpts,
-  //   fetchOptions: {
-  //     headers: {
-  //       Accept: "application/json",
-  //       "Content-Type": "application/json",
-  //     },
-  //   },
+  baseURL: apiOrigin,
+  basePath: "/auth/api",
   plugins: [
     passkeyClient(),
     twoFactorClient(),
@@ -44,3 +35,6 @@ export const authClient = createAuthClient({
     }),
   ],
 });
+
+export type TSession = typeof authClient.$Infer.Session;
+export type TUser = TSession["user"];

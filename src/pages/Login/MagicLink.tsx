@@ -1,5 +1,8 @@
-import { Controller, type SubmitHandler, useForm } from "react-hook-form";
+import { MailCheckIcon } from "lucide-react";
+import React from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,76 +14,75 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth";
+import { TRANSIENT_PARAMS, withSearch } from "@/lib/navigation";
 import { isValidEmail, resolveURL } from "@/lib/utils";
-import { useLocation, useSearchParams } from "react-router";
-
-const DefaultForm = {
-  email: "",
-};
 
 function MagicLinkForm() {
   const { t } = useTranslation();
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams(location.search);
+  const [searchParams] = useSearchParams();
+  const [sentTo, setSentTo] = React.useState<string>();
 
-  const { handleSubmit, formState, control, reset } = useForm<
-    typeof DefaultForm
-  >({
-    defaultValues: { ...DefaultForm, email: searchParams.get("email") ?? "" },
+  const { register, handleSubmit, formState } = useForm<{ email: string }>({
+    defaultValues: { email: searchParams.get("email") ?? "" },
   });
 
-  const onSubmit: SubmitHandler<typeof DefaultForm> = async (data) => {
-    const Response = await authClient.signIn.magicLink({
-      email: data.email,
-      callbackURL: resolveURL() + window.location.search,
+  const onSubmit: SubmitHandler<{ email: string }> = async ({ email }) => {
+    const { error } = await authClient.signIn.magicLink({
+      email,
+      callbackURL: resolveURL(
+        withSearch("/account", { omit: TRANSIENT_PARAMS }),
+      ),
+      errorCallbackURL: resolveURL(
+        withSearch("/login", { omit: TRANSIENT_PARAMS }),
+      ),
     });
 
-    if (Response.error) toast.error(Response.error.message);
-    else {
-      reset({ email: "" });
-      toast.success(t("A Magic Link has been sent to your mailbox!"));
-    }
+    if (error) toast.error(error.message);
+    else setSentTo(email);
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="email">{t("Email")}</FieldLabel>
-          <Controller
-            name="email"
-            control={control}
-            rules={{
-              validate: (value) =>
-                isValidEmail(value) ? true : t("Please provide a valid email!"),
-            }}
-            render={({ field }) => (
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                autoComplete="email webauthn"
-                value={field.value}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // set email to url as well
-                  searchParams.set("email", value);
-                  setSearchParams(searchParams, { replace: true });
-                  // update the form value
-                  field.onChange(value);
-                }}
-              />
-            )}
-          />
+  if (sentTo)
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center animate-in fade-in zoom-in-95">
+        <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <MailCheckIcon className="size-5" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="font-semibold">{t("Check your inbox")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("We sent a sign-in link to {{email}}. It expires shortly.", {
+              email: sentTo,
+            })}
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setSentTo(undefined)}>
+          {t("Use a different email")}
+        </Button>
+      </div>
+    );
 
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <FieldGroup className="gap-5">
+        <Field>
+          <FieldLabel htmlFor="magic-email">{t("Email")}</FieldLabel>
+          <Input
+            id="magic-email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            aria-invalid={!!formState.errors.email || undefined}
+            {...register("email", {
+              validate: (value) =>
+                isValidEmail(value) || t("Please provide a valid email!"),
+            })}
+          />
           <FieldError>{formState.errors.email?.message}</FieldError>
         </Field>
-        <Field>
-          <Button type="submit">
-            {formState.isSubmitting && <Spinner />}
-            {t("Login")}
-          </Button>
-        </Field>
+        <Button type="submit" size="lg" disabled={formState.isSubmitting}>
+          {formState.isSubmitting && <Spinner />}
+          {t("Email me a sign-in link")}
+        </Button>
       </FieldGroup>
     </form>
   );
