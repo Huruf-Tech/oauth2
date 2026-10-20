@@ -5,7 +5,7 @@ import {
   s as r,
   st as i,
 } from "./useAppBranding-GcljM9XV.js";
-import { D as a } from "./AuthLayout-BK8zv3Ad.js";
+import { D as a } from "./AuthLayout-B_Ja0_SU.js";
 var o = t(`x`, [
     [`path`, { d: `M18 6 6 18`, key: `1bl5f8` }],
     [`path`, { d: `m6 6 12 12`, key: `d8bk6v` }],

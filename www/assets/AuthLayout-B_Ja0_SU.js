@@ -162,7 +162,7 @@ import {
   z as $t,
   zr as en,
   zt as tn,
-} from "./index-ClMp350k.js";
+} from "./index-frQXYA2A.js";
 import { n as nn, t as rn } from "./BrandLogo-D2la5kwZ.js";
 var Z = i(E()),
   an = i(r(), 1);
@@ -4855,9 +4855,9 @@ function Oa({
             children: (0, $.jsx)(`div`, {
               className: `w-full max-w-[380px] animate-in fade-in slide-in-from-bottom-2 duration-500`,
               children: l
-                ? (0, $.jsx)(Ma, { error: l })
+                ? (0, $.jsx)(Pa, { error: l })
                 : f
-                  ? (0, $.jsx)(Na, {})
+                  ? (0, $.jsx)(Fa, {})
                   : (0, $.jsxs)($.Fragment, {
                       children: [
                         r &&
@@ -4926,17 +4926,42 @@ function ka({ className: e }) {
 }
 function Aa() {
   let { t: e } = T(),
-    { app: t, appName: n } = C(),
-    { has: r } = Da(),
-    i = n,
-    a = [
-      r(`passkey`) && { icon: $r, label: e(`Passkeys`) },
-      r(`2fa`) && { icon: ii, label: e(`2-step verification`) },
+    { app: t, appName: n, isLoading: r } = C(),
+    { has: i, isLoading: a } = Da(),
+    o = n,
+    s = ja(t?.heroImage);
+  if (r || a || s === `loading`) return (0, $.jsx)(Ma, {});
+  let c = s === `loaded` ? t?.heroImage : void 0,
+    l = !!t?.theme?.[`--primary`],
+    u = [
+      i(`passkey`) && { icon: $r, label: e(`Passkeys`) },
+      i(`2fa`) && { icon: ii, label: e(`2-step verification`) },
       { icon: ei, label: e(`Single sign-on`) },
     ].filter(Boolean);
   return (0, $.jsxs)(`div`, {
-    className: `relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] bg-primary p-10 text-primary-foreground`,
+    className: b(
+      `relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] p-10 animate-in fade-in duration-500`,
+      l
+        ? `bg-primary text-primary-foreground`
+        : `bg-neutral-700 text-white dark:bg-neutral-800`,
+      c && `text-white`,
+    ),
     children: [
+      c &&
+        (0, $.jsxs)($.Fragment, {
+          children: [
+            (0, $.jsx)(`img`, {
+              src: c,
+              alt: ``,
+              "aria-hidden": !0,
+              className: `absolute inset-0 -z-2 size-full object-cover`,
+            }),
+            (0, $.jsx)(`div`, {
+              "aria-hidden": !0,
+              className: `absolute inset-0 -z-1 bg-linear-to-t from-black/75 via-black/25 to-black/35`,
+            }),
+          ],
+        }),
       (0, $.jsx)(`div`, {
         "aria-hidden": !0,
         className: `absolute inset-0 -z-1 bg-[radial-gradient(80%_60%_at_100%_0%,color-mix(in_oklch,white_28%,transparent),transparent_60%),radial-gradient(70%_60%_at_0%_100%,color-mix(in_oklch,black_35%,transparent),transparent_70%)]`,
@@ -4960,13 +4985,19 @@ function Aa() {
           e(`Secure sign-in`),
         ],
       }),
-      (0, $.jsx)(ja, { name: i }),
+      !c &&
+        (0, $.jsx)(Na, {
+          name: o,
+          accentClass: l ? `text-primary` : `text-neutral-700`,
+        }),
       (0, $.jsxs)(`div`, {
         className: `flex max-w-md flex-col gap-5`,
         children: [
           (0, $.jsx)(`h2`, {
             className: `text-4xl leading-[1.1] font-semibold text-balance`,
-            children: e(`One account for everything {{name}}.`, { name: i }),
+            children:
+              t?.heroTitle ||
+              e(`One account for everything {{name}}.`, { name: o }),
           }),
           t?.description &&
             (0, $.jsx)(`p`, {
@@ -4975,7 +5006,7 @@ function Aa() {
             }),
           (0, $.jsx)(`ul`, {
             className: `flex flex-wrap gap-2`,
-            children: a.map((e) =>
+            children: u.map((e) =>
               (0, $.jsxs)(
                 `li`,
                 {
@@ -4994,8 +5025,56 @@ function Aa() {
     ],
   });
 }
-function ja({ name: e }) {
-  let { t } = T();
+function ja(e) {
+  let [t, n] = Z.useState();
+  return (
+    Z.useEffect(() => {
+      if (!e) return;
+      let t = !1,
+        r = new Image();
+      return (
+        (r.onload = () => !t && n({ src: e, status: `loaded` })),
+        (r.onerror = () => !t && n({ src: e, status: `error` })),
+        (r.src = e),
+        () => {
+          t = !0;
+        }
+      );
+    }, [e]),
+    e ? (t?.src === e ? t.status : `loading`) : `none`
+  );
+}
+function Ma() {
+  let e = `rounded-md bg-foreground/7 dark:bg-foreground/6`;
+  return (0, $.jsxs)(nn, {
+    "aria-hidden": !0,
+    className: `flex h-full flex-col justify-between rounded-[28px] p-10`,
+    children: [
+      (0, $.jsx)(`div`, { className: b(e, `h-7 w-32 rounded-full`) }),
+      (0, $.jsx)(`div`, {
+        className: b(e, `mx-auto h-28 w-full max-w-xs rounded-2xl`),
+      }),
+      (0, $.jsxs)(`div`, {
+        className: `flex flex-col gap-4`,
+        children: [
+          (0, $.jsx)(`div`, { className: b(e, `h-10 w-3/4`) }),
+          (0, $.jsx)(`div`, { className: b(e, `h-10 w-1/2`) }),
+          (0, $.jsx)(`div`, { className: b(e, `mt-2 h-5 w-2/3`) }),
+          (0, $.jsxs)(`div`, {
+            className: `mt-1 flex gap-2`,
+            children: [
+              (0, $.jsx)(`div`, { className: b(e, `h-8 w-28 rounded-full`) }),
+              (0, $.jsx)(`div`, { className: b(e, `h-8 w-36 rounded-full`) }),
+              (0, $.jsx)(`div`, { className: b(e, `h-8 w-32 rounded-full`) }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function Na({ name: e, accentClass: t }) {
+  let { t: n } = T();
   return (0, $.jsxs)(`div`, {
     "aria-hidden": !0,
     className: `mx-auto w-full max-w-xs rotate-[-4deg] rounded-2xl bg-white/14 p-4 shadow-2xl shadow-black/20 ring-1 ring-white/25 backdrop-blur-md transition-transform duration-700 hover:rotate-0`,
@@ -5012,16 +5091,19 @@ function ja({ name: e }) {
             children: [
               (0, $.jsx)(`span`, {
                 className: `text-sm font-semibold`,
-                children: t(`Verified`),
+                children: n(`Verified`),
               }),
               (0, $.jsx)(`span`, {
                 className: `text-xs opacity-75`,
-                children: t(`Signed in to {{name}}`, { name: e }),
+                children: n(`Signed in to {{name}}`, { name: e }),
               }),
             ],
           }),
           (0, $.jsx)(`span`, {
-            className: `ms-auto flex size-6 items-center justify-center rounded-full bg-white text-primary`,
+            className: b(
+              `ms-auto flex size-6 items-center justify-center rounded-full bg-white`,
+              t,
+            ),
             children: (0, $.jsx)(ii, { className: `size-3.5` }),
           }),
         ],
@@ -5040,7 +5122,7 @@ function ja({ name: e }) {
     ],
   });
 }
-function Ma({ error: e }) {
+function Pa({ error: e }) {
   let { t } = T();
   return (0, $.jsxs)(`div`, {
     className: `flex flex-col items-center gap-4 rounded-2xl border bg-card p-8 text-center shadow-xs/5`,
@@ -5070,7 +5152,7 @@ function Ma({ error: e }) {
     ],
   });
 }
-function Na() {
+function Fa() {
   return (0, $.jsxs)(`div`, {
     className: `flex flex-col gap-6`,
     children: [

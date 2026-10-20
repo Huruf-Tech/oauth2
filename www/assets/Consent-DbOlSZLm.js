@@ -13,7 +13,7 @@ import {
   wt as d,
   xt as f,
 } from "./useAppBranding-GcljM9XV.js";
-import { T as p, t as m } from "./AuthLayout-BK8zv3Ad.js";
+import { T as p, t as m } from "./AuthLayout-B_Ja0_SU.js";
 import {
   a as h,
   i as g,
@@ -22,7 +22,7 @@ import {
   t as y,
 } from "./UserAvatar-hG12eCzy.js";
 import { t as b } from "./mail-D1PhSive.js";
-import { D as x, Hr as S, c as C, o as w } from "./index-ClMp350k.js";
+import { D as x, Hr as S, c as C, o as w } from "./index-frQXYA2A.js";
 import {
   a as T,
   i as E,

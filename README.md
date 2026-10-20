@@ -90,12 +90,19 @@ backend:
   "privacyURL": "https://acme.example/privacy",
   "supportEmail": "support@acme.example",
   "hidePoweredBy": true,
+  "heroImage": "https://…/hero.jpg", // sign-in panel background; hides the floating card
+  "heroTitle": "Ship faster with Acme Cloud.", // sign-in panel headline
   "theme": {
     "--primary": "oklch(0.55 0.24 293)",
     "--primary-foreground": "oklch(1 0 0)",
   },
 }
 ```
+
+`heroTitle` defaults to "One account for everything {name}." The sign-in panel
+uses the theme's `--primary` color (gray when none is set) and, when
+`heroImage` is set, shows that image instead of the floating "Verified" card.
+A hero image that fails to load falls back to the default panel.
 
 The logo is used everywhere, favicon included. When the backend sends no
 `logo`/`icon`, or the image fails to load, the Huruf logo is shown instead.

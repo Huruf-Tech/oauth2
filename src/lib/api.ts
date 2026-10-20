@@ -15,6 +15,10 @@ export type TAppBranding = {
   privacyURL?: string;
   supportEmail?: string;
   hidePoweredBy?: boolean;
+  /** Background image of the sign-in brand panel. */
+  heroImage?: string;
+  /** Headline of the sign-in brand panel. */
+  heroTitle?: string;
   theme?: Record<`--${string}`, string>;
 };
 

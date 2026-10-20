@@ -5,7 +5,7 @@ import {
   RefreshCcwIcon,
   ShieldCheckIcon,
 } from "lucide-react";
-import type React from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/BrandLogo";
 import PoweredBy from "@/components/PoweredBy";
@@ -136,9 +136,21 @@ export function LegalLinks({ className }: { className?: string }) {
 
 function BrandPanel() {
   const { t } = useTranslation();
-  const { app, appName } = useAppBranding();
-  const { has } = useCapabilities();
+  const { app, appName, isLoading } = useAppBranding();
+  const { has, isLoading: capsLoading } = useCapabilities();
   const name = appName;
+  const imageStatus = useImageStatus(app?.heroImage);
+
+  // Hold the skeleton until a background image is ready, so it never pops in.
+  if (isLoading || capsLoading || imageStatus === "loading")
+    return <BrandPanelSkeleton />;
+
+  // A background image that failed to load falls back to the default panel.
+  const heroImage = imageStatus === "loaded" ? app?.heroImage : undefined;
+
+  // Only paint the panel in the brand color when the project defines one;
+  // otherwise stay neutral instead of showing the default accent.
+  const branded = !!app?.theme?.["--primary"];
 
   const features = [
     has("passkey") && { icon: FingerprintIcon, label: t("Passkeys") },
@@ -147,7 +159,30 @@ function BrandPanel() {
   ].filter(Boolean) as { icon: typeof KeyRoundIcon; label: string }[];
 
   return (
-    <div className="relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] bg-primary p-10 text-primary-foreground">
+    <div
+      className={cn(
+        "relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] p-10 animate-in fade-in duration-500",
+        branded
+          ? "bg-primary text-primary-foreground"
+          : "bg-neutral-700 text-white dark:bg-neutral-800",
+        heroImage && "text-white",
+      )}
+    >
+      {heroImage && (
+        <>
+          <img
+            src={heroImage}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 -z-2 size-full object-cover"
+          />
+          {/* Scrim keeping the badge and headline readable on any photo */}
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-1 bg-linear-to-t from-black/75 via-black/25 to-black/35"
+          />
+        </>
+      )}
       {/* Layered light, built only from the brand color so any tenant theme works */}
       <div
         aria-hidden
@@ -171,11 +206,17 @@ function BrandPanel() {
         {t("Secure sign-in")}
       </span>
 
-      <SecurityCard name={name} />
+      {!heroImage && (
+        <SecurityCard
+          name={name}
+          accentClass={branded ? "text-primary" : "text-neutral-700"}
+        />
+      )}
 
       <div className="flex max-w-md flex-col gap-5">
         <h2 className="text-4xl leading-[1.1] font-semibold text-balance">
-          {t("One account for everything {{name}}.", { name })}
+          {app?.heroTitle ||
+            t("One account for everything {{name}}.", { name })}
         </h2>
         {app?.description && (
           <p className="text-base text-pretty opacity-80">{app.description}</p>
@@ -196,8 +237,62 @@ function BrandPanel() {
   );
 }
 
+/** Tracks whether an image URL can be loaded ("none" when there's no URL). */
+function useImageStatus(src?: string) {
+  const [result, setResult] = React.useState<{
+    src: string;
+    status: "loaded" | "error";
+  }>();
+
+  React.useEffect(() => {
+    if (!src) return;
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => !cancelled && setResult({ src, status: "loaded" });
+    image.onerror = () => !cancelled && setResult({ src, status: "error" });
+    image.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  if (!src) return "none";
+  return result?.src === src ? result.status : "loading";
+}
+
+/** Placeholder with the panel's layout while branding and capabilities load. */
+function BrandPanelSkeleton() {
+  const block = "rounded-md bg-foreground/7 dark:bg-foreground/6";
+
+  return (
+    <Skeleton
+      aria-hidden
+      className="flex h-full flex-col justify-between rounded-[28px] p-10"
+    >
+      <div className={cn(block, "h-7 w-32 rounded-full")} />
+      <div className={cn(block, "mx-auto h-28 w-full max-w-xs rounded-2xl")} />
+      <div className="flex flex-col gap-4">
+        <div className={cn(block, "h-10 w-3/4")} />
+        <div className={cn(block, "h-10 w-1/2")} />
+        <div className={cn(block, "mt-2 h-5 w-2/3")} />
+        <div className="mt-1 flex gap-2">
+          <div className={cn(block, "h-8 w-28 rounded-full")} />
+          <div className={cn(block, "h-8 w-36 rounded-full")} />
+          <div className={cn(block, "h-8 w-32 rounded-full")} />
+        </div>
+      </div>
+    </Skeleton>
+  );
+}
+
 /** Decorative "glass" card hinting at what the account protects. */
-function SecurityCard({ name }: { name: string }) {
+function SecurityCard({
+  name,
+  accentClass,
+}: {
+  name: string;
+  accentClass: string;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -215,7 +310,12 @@ function SecurityCard({ name }: { name: string }) {
             {t("Signed in to {{name}}", { name })}
           </span>
         </div>
-        <span className="ms-auto flex size-6 items-center justify-center rounded-full bg-white text-primary">
+        <span
+          className={cn(
+            "ms-auto flex size-6 items-center justify-center rounded-full bg-white",
+            accentClass,
+          )}
+        >
           <ShieldCheckIcon className="size-3.5" />
         </span>
       </div>
