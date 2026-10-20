@@ -7,7 +7,7 @@ import {
   xt as a,
   y as o,
 } from "./useAppBranding-GcljM9XV.js";
-import { o as s } from "./index-frQXYA2A.js";
+import { o as s } from "./index-CvWHA45R.js";
 import { t as c } from "./BrandLogo-D2la5kwZ.js";
 import { t as l } from "./auth-DO2_vqL6.js";
 var u = e(i(), 1),

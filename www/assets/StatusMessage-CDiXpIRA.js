@@ -1,5 +1,5 @@
 import { K as e, a as t } from "./useAppBranding-GcljM9XV.js";
-import { c as n } from "./index-frQXYA2A.js";
+import { c as n } from "./index-CvWHA45R.js";
 var r = t(`circle-check`, [
     [`circle`, { cx: `12`, cy: `12`, r: `10`, key: `1mglay` }],
     [`path`, { d: `m9 12 2 2 4-4`, key: `dzmm74` }],

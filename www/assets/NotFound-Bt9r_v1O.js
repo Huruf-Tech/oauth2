@@ -1,6 +1,6 @@
 import { K as e, a as t, st as n, ut as r } from "./useAppBranding-GcljM9XV.js";
-import { t as i } from "./AuthLayout-B_Ja0_SU.js";
-import { D as a } from "./index-frQXYA2A.js";
+import { t as i } from "./AuthLayout-B7RMIG_n.js";
+import { D as a } from "./index-CvWHA45R.js";
 import { n as o, t as s } from "./navigation-Dd1cx1bO.js";
 var c = t(`compass`, [
     [`circle`, { cx: `12`, cy: `12`, r: `10`, key: `1mglay` }],

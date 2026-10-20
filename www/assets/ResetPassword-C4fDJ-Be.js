@@ -8,7 +8,7 @@ import {
   xt as o,
   y as s,
 } from "./useAppBranding-GcljM9XV.js";
-import { t as c } from "./AuthLayout-B_Ja0_SU.js";
+import { t as c } from "./AuthLayout-B7RMIG_n.js";
 import { t as l } from "./arrow-left-DYUggq6L.js";
 import { t as u } from "./mail-check-CpZB-loQ.js";
 import {
@@ -20,7 +20,7 @@ import {
   o as g,
   x as _,
   y as v,
-} from "./index-frQXYA2A.js";
+} from "./index-CvWHA45R.js";
 import { t as y } from "./auth-DO2_vqL6.js";
 import { n as b, t as x } from "./navigation-Dd1cx1bO.js";
 import { r as S } from "./index.esm-DYQrnkVj.js";
