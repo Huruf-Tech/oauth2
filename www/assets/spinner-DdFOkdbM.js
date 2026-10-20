@@ -1,1 +1,0 @@
-import{W as e,o as t,r as n}from"./useAppBranding-B2Dj4GNW.js";var r=n(`loader-circle`,[[`path`,{d:`M21 12a9 9 0 1 1-6.219-8.56`,key:`13zald`}]]),i=e();function a({className:e,...n}){return(0,i.jsx)(r,{"aria-label":`Loading`,className:t(`animate-spin`,e),role:`status`,...n})}export{a as t};

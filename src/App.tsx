@@ -6,7 +6,7 @@ import { DirectionProvider } from "./components/ui/direction";
 import { ConfirmProvider } from "./contexts/Confirm";
 import { LoadingProvider, ProgressBar } from "./contexts/Loading";
 import { ThemeProvider, useTheme } from "./contexts/Theme";
-import { useAppBranding } from "./hooks/useAppBranding";
+import { DEFAULT_LOGO, useAppBranding } from "./hooks/useAppBranding";
 import { useFavicon } from "./hooks/useFavicon";
 import { useLanguage } from "./hooks/useLanguage";
 import { applyThemeVars } from "./lib/utils";
@@ -32,12 +32,12 @@ function App() {
 }
 
 function Shell({ language }: { language: string | null }) {
-  const { app } = useAppBranding();
+  const { app, logo } = useAppBranding();
   const { resolved } = useTheme();
   const { direction } = useLanguage(language);
   const navigation = useNavigation();
 
-  useFavicon(app?.icon ?? app?.logo);
+  useFavicon(logo, DEFAULT_LOGO);
 
   React.useEffect(() => {
     if (app?.theme) applyThemeVars(app.theme);

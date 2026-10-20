@@ -1,18 +1,30 @@
 import React from "react";
 
-export function useFavicon(href?: string) {
+function setFavicon(href: string) {
+  let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+
+  link.removeAttribute("type");
+  link.href = href;
+}
+
+/** Uses `href` as the favicon, or `fallback` if that image fails to load. */
+export function useFavicon(href: string, fallback: string) {
   React.useEffect(() => {
-    if (!href) return;
+    let cancelled = false;
+    const image = new Image();
 
-    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+    image.onload = () => !cancelled && setFavicon(href);
+    image.onerror = () => !cancelled && setFavicon(fallback);
+    image.src = href;
 
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
-
-    link.removeAttribute("type");
-    link.href = href;
-  }, [href]);
+    return () => {
+      cancelled = true;
+    };
+  }, [href, fallback]);
 }

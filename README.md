@@ -83,8 +83,8 @@ backend:
 {
   "name": "Acme Cloud", // required
   "description": "Shown on the brand panel",
-  "logo": "https://…/logo.png", // `icon` is preferred for small marks/favicon
-  "icon": "https://…/icon.png",
+  "logo": "https://…/logo.png", // header, consent screen and favicon
+  "icon": "https://…/icon.png", // used only when `logo` is missing
   "homepageURL": "https://acme.example",
   "termsURL": "https://acme.example/terms", // legal links appear only when set
   "privacyURL": "https://acme.example/privacy",
@@ -97,9 +97,10 @@ backend:
 }
 ```
 
-Without a logo the app shows the project's initials in its primary color. The
-Huruf name and mark are only a fallback while branding loads or if the
-endpoint fails.
+The logo is used everywhere, favicon included. When the backend sends no
+`logo`/`icon`, or the image fails to load, the Huruf logo is shown instead.
+The Huruf name is only a fallback while branding loads or if the endpoint
+fails.
 
 ## Query parameters
 

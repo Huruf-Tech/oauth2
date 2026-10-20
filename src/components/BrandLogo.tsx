@@ -1,10 +1,9 @@
-import HurufLogo from "@/assets/huruf-logo.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAppBranding } from "@/hooks/useAppBranding";
-import { cn, getInitials } from "@/lib/utils";
+import { DEFAULT_LOGO, useAppBranding } from "@/hooks/useAppBranding";
+import { cn } from "@/lib/utils";
 
-/** The tenant's logo, falling back to its initials and then the Huruf mark. */
+/** The project's logo from branding, falling back to the Huruf logo. */
 export function BrandLogo({
   className,
   showName = false,
@@ -12,8 +11,7 @@ export function BrandLogo({
   className?: string;
   showName?: boolean;
 }) {
-  const { app, isLoading, appName } = useAppBranding();
-  const src = app?.icon ?? app?.logo ?? (app ? undefined : HurufLogo);
+  const { isLoading, appName, logo } = useAppBranding();
 
   if (isLoading)
     return (
@@ -25,15 +23,15 @@ export function BrandLogo({
 
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <Avatar
-        className={cn(
-          "size-9 rounded-xl bg-transparent ring-1 ring-foreground/8",
-          className,
-        )}
-      >
-        {src && <AvatarImage src={src} alt={appName} />}
-        <AvatarFallback className="rounded-[inherit] bg-primary text-sm font-semibold text-primary-foreground">
-          {getInitials(app?.name)}
+      <Avatar className={cn("size-9 rounded-xl bg-transparent", className)}>
+        <AvatarImage src={logo} alt={appName} className="object-contain" />
+        {/* Shown if the project's logo URL fails to load */}
+        <AvatarFallback className="rounded-[inherit] bg-transparent">
+          <img
+            src={DEFAULT_LOGO}
+            alt={appName}
+            className="size-full object-contain"
+          />
         </AvatarFallback>
       </Avatar>
       {showName && (
