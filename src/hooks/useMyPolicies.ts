@@ -12,11 +12,9 @@ export function useMyPolicies() {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
-  const [myPolicies, setMyPolicies] = React.useState<
-    Awaited<
-      typeof policies
-    > | null
-  >(null);
+  const [myPolicies, setMyPolicies] = React.useState<Awaited<
+    typeof policies
+  > | null>(null);
 
   React.useEffect(() => {
     setIsLoading(true);
